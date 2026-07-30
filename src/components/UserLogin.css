@@ -329,7 +329,7 @@
 .auth-card.mode-signup .auth-overlay-track { grid-column: 1; }
 
 .auth-overlay-logo {
-  height: 38px;
+  height:150px;
   width: auto;
   margin-bottom: 8px;
   filter: brightness(0) invert(1);
