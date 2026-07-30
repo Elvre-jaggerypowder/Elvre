@@ -874,7 +874,6 @@ const Checkout = () => {
                 <p>🔒 Secure Checkout</p>
                 <p>✅ 100% Safe & Secure Payment</p>
                 <p>🚚 Free Shipping on orders above ₹499</p>
-                <p>🔄 7-Day Easy Returns</p>
               </div>
             </div>
           </div>

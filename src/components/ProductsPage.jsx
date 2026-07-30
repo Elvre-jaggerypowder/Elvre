@@ -3,14 +3,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import WhatsApp from "./WhatsApp";
 import { supabase } from '../supabaseClient';
-import { useWishlist } from "../context/WishlistContext"; // ✅ Import wishlist hook
-import { FaHeart, FaRegHeart } from "react-icons/fa"; // ✅ Heart icons
+import { useWishlist } from "../context/WishlistContext";
+import { FaHeart, FaRegHeart } from "react-icons/fa";
 import "./ProductsPage.css";
 
 const ProductsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist(); // ✅ Wishlist functions
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -30,7 +30,7 @@ const ProductsPage = () => {
     { id: "special", name: "Special", icon: "⭐" }
   ];
 
-  // ─── LOAD PRODUCTS (PRIMARY: SUPABASE, FALLBACK: LOCALSTORAGE) ───
+  // ─── LOAD PRODUCTS ───
   const loadProducts = async () => {
     setLoading(true);
     try {
@@ -41,16 +41,10 @@ const ProductsPage = () => {
       
       if (error) {
         console.error('❌ Supabase error:', error);
-        // Fallback to localStorage
         const cached = localStorage.getItem("elvreProducts");
-        if (cached) {
-          console.log('📦 Loaded from localStorage (fallback)');
-          setProducts(JSON.parse(cached));
-        } else {
-          setProducts([]);
-        }
+        if (cached) setProducts(JSON.parse(cached));
+        else setProducts([]);
       } else if (data && data.length > 0) {
-        console.log(`✅ Loaded ${data.length} products from Supabase`);
         const formatted = data.map(p => ({
           id: p.id,
           name: p.name,
@@ -64,22 +58,14 @@ const ProductsPage = () => {
           soldCount: p.sold_count || 0
         }));
         setProducts(formatted);
-        // Update cache
         localStorage.setItem("elvreProducts", JSON.stringify(formatted));
       } else {
-        // No products in Supabase – use localStorage (if any)
         const cached = localStorage.getItem("elvreProducts");
-        if (cached) {
-          console.log('📦 Loaded from localStorage (cache)');
-          setProducts(JSON.parse(cached));
-        } else {
-          console.log('📭 No products found – showing empty');
-          setProducts([]);
-        }
+        if (cached) setProducts(JSON.parse(cached));
+        else setProducts([]);
       }
     } catch (err) {
       console.error('❌ Error loading products:', err);
-      // Last resort: localStorage
       const cached = localStorage.getItem("elvreProducts");
       if (cached) setProducts(JSON.parse(cached));
       else setProducts([]);
@@ -87,7 +73,7 @@ const ProductsPage = () => {
     setLoading(false);
   };
 
-  // ─── LOAD REVIEWS (for ratings) ───
+  // ─── LOAD REVIEWS ───
   const loadReviews = async () => {
     try {
       const { data, error } = await supabase
@@ -96,7 +82,6 @@ const ProductsPage = () => {
       
       if (error) {
         console.error('❌ Reviews error:', error);
-        // fallback to localStorage
         const saved = JSON.parse(localStorage.getItem("productReviews") || "{}");
         setReviews(saved);
         return;
@@ -132,40 +117,30 @@ const ProductsPage = () => {
     }
   };
 
-  // ─── INITIAL LOAD ───
   useEffect(() => {
     loadProducts();
     loadReviews();
-
-    // Listen for manual refresh events from admin
     const handleProductsUpdated = () => {
       console.log('🔄 Manual products update event received');
       loadProducts();
     };
     window.addEventListener("productsUpdated", handleProductsUpdated);
-
     return () => {
       window.removeEventListener("productsUpdated", handleProductsUpdated);
     };
   }, []);
 
-  // ─── REAL‑TIME SUBSCRIPTION ───
   useEffect(() => {
     const subscription = supabase
       .channel('products-channel')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'products' },
-        (payload) => {
-          console.log('🔄 Real‑time product change detected:', payload);
-          loadProducts();
-        }
+        () => loadProducts()
       )
       .subscribe();
-
     return () => subscription.unsubscribe();
   }, []);
 
-  // ─── AUTO VIEW MODE ───
   useEffect(() => {
     const handleResize = () => {
       setViewMode(window.innerWidth <= 768 ? "list" : "grid");
@@ -175,14 +150,12 @@ const ProductsPage = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // ─── SEARCH FROM URL ───
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const search = params.get("search");
     if (search) setSearchQuery(search);
   }, [location.search]);
 
-  // ─── APPLY FILTERS ───
   useEffect(() => {
     applyFilters();
   }, [products, searchQuery, selectedCategory, priceRange, sortBy]);
@@ -233,7 +206,8 @@ const ProductsPage = () => {
     navigate("/products");
   };
 
-  const addToCart = (product) => {
+  const addToCart = (product, e) => {
+    if (e) e.stopPropagation(); // Prevent navigation
     const cart = JSON.parse(localStorage.getItem("cart") || "[]");
     const existing = cart.find(item => item.id === product.id);
     if (existing) {
@@ -250,18 +224,18 @@ const ProductsPage = () => {
     setTimeout(() => toast.remove(), 2000);
   };
 
-  const getCategoryCount = (categoryId) => {
-    if (categoryId === "all") return products.length;
-    return products.filter(p => p.category === categoryId).length;
-  };
-
-  // ─── WISHLIST HANDLERS ───
-  const toggleWishlist = (product) => {
+  const toggleWishlist = (product, e) => {
+    if (e) e.stopPropagation();
     if (isInWishlist(product.id)) {
       removeFromWishlist(product.id);
     } else {
       addToWishlist(product);
     }
+  };
+
+  const getCategoryCount = (categoryId) => {
+    if (categoryId === "all") return products.length;
+    return products.filter(p => p.category === categoryId).length;
   };
 
   if (loading) {
@@ -274,7 +248,6 @@ const ProductsPage = () => {
     );
   }
 
-  // ─── RENDER ───
   return (
     <>
       <Navbar />
@@ -418,69 +391,84 @@ const ProductsPage = () => {
                 </div>
               ) : (
                 <div className={`products-grid-list ${viewMode === "list" ? "list-view" : "grid-view"}`}>
-                  {filteredProducts.map((product) => (
-                    <div key={product.id} className="product-card">
-                      {product.badge && (
-                        <span className={`product-badge ${product.badge.toLowerCase()}`}>{product.badge}</span>
-                      )}
-                      <div className="product-image" onClick={() => navigate(`/product/${product.id}`)}>
-                        <img src={product.image || "/assets/jaggery.png"} alt={product.name} />
-                        <div className="product-overlay">
-                          <button className="quick-view" onClick={() => navigate(`/product/${product.id}`)}>
-                            Quick View
-                          </button>
+                  {filteredProducts.map((product) => {
+                    // Get rating for this product
+                    const rating = reviews[product.id]?.rating || 4.0;
+                    const reviewCount = reviews[product.id]?.count || 0;
+
+                    return (
+                      <div 
+                        key={product.id} 
+                        className="product-card"
+                        onClick={() => navigate(`/product/${product.id}`)} // Entire card clickable
+                        style={{ cursor: 'pointer' }}
+                      >
+                        {product.badge && (
+                          <span className={`product-badge ${product.badge.toLowerCase()}`}>{product.badge}</span>
+                        )}
+                        <div className="product-image">
+                          <img src={product.image || "/assets/jaggery.png"} alt={product.name} />
+                          {/* ✅ Quick View overlay REMOVED – no overlay */}
                         </div>
-                      </div>
-                      <div className="product-info">
-                        <div className="product-header-row">
-                          <h3 onClick={() => navigate(`/product/${product.id}`)}>{product.name}</h3>
-                          {/* ✅ Wishlist Button */}
-                          <button 
-                            className="wishlist-btn" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleWishlist(product);
-                            }}
-                            title={isInWishlist(product.id) ? "Remove from wishlist" : "Add to wishlist"}
-                          >
-                            {isInWishlist(product.id) ? (
-                              <FaHeart style={{ color: "#e74c3c" }} />
-                            ) : (
-                              <FaRegHeart />
-                            )}
-                          </button>
-                        </div>
-                        <div className="product-rating">
-                          <div className="stars">
-                            {"★".repeat(Math.floor(reviews[product.id]?.rating || 4))}
-                            {"☆".repeat(5 - Math.floor(reviews[product.id]?.rating || 4))}
+                        <div className="product-info">
+                          <div className="product-header-row">
+                            <h3>{product.name}</h3>
+                            {/* Wishlist Button – stops propagation */}
+                            <button 
+                              className="wishlist-btn" 
+                              onClick={(e) => toggleWishlist(product, e)}
+                              title={isInWishlist(product.id) ? "Remove from wishlist" : "Add to wishlist"}
+                            >
+                              {isInWishlist(product.id) ? (
+                                <FaHeart style={{ color: "#e74c3c" }} />
+                              ) : (
+                                <FaRegHeart />
+                              )}
+                            </button>
                           </div>
-                          <span>({reviews[product.id]?.count || 0} reviews)</span>
-                        </div>
-                        <p className="product-description">{product.description?.substring(0, 80)}...</p>
-                        <div className="product-price">
-                          <span className="current-price">{product.price}</span>
-                          <span className="original-price">₹{Math.round(product.priceValue * 1.2)}</span>
-                          <span className="discount">Save {Math.round(product.priceValue * 0.2)}₹</span>
-                        </div>
-                        <div className="stock-status">
-                          {product.stock > 0 ? (
-                            <span className="in-stock">✓ In Stock ({product.stock} left)</span>
-                          ) : (
-                            <span className="out-of-stock">✗ Out of Stock</span>
-                          )}
-                        </div>
-                        <div className="product-actions">
-                          <button className="view-details" onClick={() => navigate(`/product/${product.id}`)}>
-                            View Details
-                          </button>
-                          <button className="add-to-cart" onClick={() => addToCart(product)} disabled={product.stock === 0}>
-                            Add to Cart
-                          </button>
+                          <div className="product-rating">
+                            <div className="stars">
+                              {"★".repeat(Math.floor(rating))}
+                              {"☆".repeat(5 - Math.floor(rating))}
+                            </div>
+                            <span>({reviewCount} reviews)</span>
+                          </div>
+                          <p className="product-description">{product.description?.substring(0, 80)}...</p>
+                          <div className="product-price">
+                            <span className="current-price">{product.price}</span>
+                            <span className="original-price">₹{Math.round(product.priceValue * 1.2)}</span>
+                            <span className="discount">Save {Math.round(product.priceValue * 0.2)}₹</span>
+                          </div>
+                          <div className="stock-status">
+                            {product.stock > 0 ? (
+                              <span className="in-stock">✓ In Stock ({product.stock} left)</span>
+                            ) : (
+                              <span className="out-of-stock">✗ Out of Stock</span>
+                            )}
+                          </div>
+                          <div className="product-actions">
+                            {/* View Details button also navigates (but now card is clickable too) */}
+                            <button 
+                              className="view-details" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/product/${product.id}`);
+                              }}
+                            >
+                              View Details
+                            </button>
+                            <button 
+                              className="add-to-cart" 
+                              onClick={(e) => addToCart(product, e)}
+                              disabled={product.stock === 0}
+                            >
+                              Add to Cart
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

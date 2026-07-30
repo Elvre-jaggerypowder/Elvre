@@ -1,7 +1,5 @@
-const path = require('path');
-
 // ─── 1. SABSE PEHLE ENV LOAD KARO ───
-require('dotenv').config({ path: path.resolve(__dirname, '.env') });
+require('dotenv').config();
 
 // ─── 2. CONSOLE LOG (Keys available hain) ───
 console.log('🔑 RAZORPAY_KEY_ID:', process.env.RAZORPAY_KEY_ID || '❌ MISSING');
@@ -191,7 +189,3 @@ app.post('/api/verify-payment', rateLimit, (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
 });
-
-
-
-
