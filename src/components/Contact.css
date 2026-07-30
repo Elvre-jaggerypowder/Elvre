@@ -1,0 +1,371 @@
+/* ============================================
+   CONTACT SECTION - PROFESSIONAL
+   ============================================ */
+
+.contact-section {
+  padding: 80px 20px;
+  background: #f5f7fa;
+}
+
+.contact-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ===== HEADER ===== */
+.contact-header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.contact-header h2 {
+  font-size: 2.5rem;
+  color: #1a2e1e;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.contact-header p {
+  font-size: 1rem;
+  color: #8B5E3C;
+  letter-spacing: 4px;
+  font-weight: 500;
+}
+
+/* ===== GRID ===== */
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 50px;
+}
+
+/* ===== LEFT - CONTACT INFO ===== */
+.contact-info {
+  background: #1a2e1e;
+  border-radius: 20px;
+  padding: 35px 30px;
+  color: white;
+}
+
+.contact-info h3 {
+  font-size: 1.5rem;
+  color: white;
+  margin-bottom: 5px;
+}
+
+.contact-info-sub {
+  color: rgba(255,255,255,0.6);
+  font-size: 0.95rem;
+  margin-bottom: 25px;
+}
+
+.contact-info-items {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.contact-info-item {
+  display: flex;
+  gap: 15px;
+  align-items: flex-start;
+}
+
+.contact-info-icon {
+  font-size: 24px;
+  min-width: 40px;
+  background: rgba(255,255,255,0.08);
+  width: 45px;
+  height: 45px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.contact-info-item h4 {
+  font-size: 14px;
+  color: #f1a40f;
+  margin: 0 0 3px;
+  font-weight: 600;
+}
+
+.contact-info-item p {
+  font-size: 14px;
+  color: rgba(255,255,255,0.7);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ===== RIGHT - FORM ===== */
+.contact-form {
+  background: white;
+  border-radius: 20px;
+  padding: 35px 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f0f0f0;
+}
+
+.contact-form h3 {
+  font-size: 1.3rem;
+  color: #1a2e1e;
+  margin-bottom: 5px;
+}
+
+.contact-form .form-subtitle {
+  color: #777;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+/* ===== FORM GROUP ===== */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+  font-size: 14px;
+}
+
+.required {
+  color: #f44336;
+}
+
+/* ===== RATING STARS ===== */
+.rating-group {
+  background: #f9f3e8;
+  padding: 15px 18px;
+  border-radius: 12px;
+}
+
+.rating-stars {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.star-btn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  transition: all 0.3s;
+  padding: 2px;
+}
+
+.star-btn:hover {
+  transform: scale(1.15);
+}
+
+.star-btn.active {
+  transform: scale(1.1);
+}
+
+.rating-label {
+  margin-left: 10px;
+  font-size: 13px;
+  color: #555;
+  font-weight: 500;
+}
+
+/* ===== CATEGORY SELECT ===== */
+.category-select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  font-size: 14px;
+  background: #fafafa;
+  transition: all 0.3s;
+  font-family: inherit;
+}
+
+.category-select:focus {
+  outline: none;
+  border-color: #8B5E3C;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(139,94,60,0.08);
+}
+
+/* ===== INPUTS ===== */
+.contact-form input,
+.contact-form textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  font-size: 14px;
+  transition: all 0.3s;
+  font-family: inherit;
+  background: #fafafa;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+  outline: none;
+  border-color: #8B5E3C;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(139,94,60,0.08);
+}
+
+.contact-form textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* ===== SUBMIT BUTTON ===== */
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  background: #8B5E3C;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.submit-btn:hover {
+  background: #6d4a2e;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(139,94,60,0.2);
+}
+
+/* ===== FORM STATUS ===== */
+.form-status {
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 14px;
+  background: #f5f7fa;
+}
+
+/* ===== SECURE NOTE ===== */
+.secure-note {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.secure-note p {
+  font-size: 12px;
+  color: #999;
+}
+
+/* ============================================
+   RECENT FEEDBACKS
+   ============================================ */
+
+.recent-feedbacks {
+  margin-top: 40px;
+}
+
+.recent-feedbacks h3 {
+  font-size: 1.3rem;
+  color: #1a2e1e;
+  margin-bottom: 15px;
+}
+
+.feedback-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+}
+
+.feedback-item {
+  background: white;
+  border-radius: 12px;
+  padding: 18px 20px;
+  border-left: 4px solid #8B5E3C;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+
+.feedback-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.feedback-item-header strong {
+  color: #1a2e1e;
+}
+
+.feedback-rating {
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+.feedback-date {
+  font-size: 11px;
+  color: #bbb;
+}
+
+.feedback-message {
+  font-size: 13px;
+  color: #555;
+  margin: 6px 0;
+  line-height: 1.5;
+}
+
+.feedback-category {
+  display: inline-block;
+  font-size: 11px;
+  background: #f9f3e8;
+  color: #8B5E3C;
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 968px) {
+  .contact-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .feedback-list {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .contact-section {
+    padding: 60px 15px;
+  }
+
+  .contact-header h2 {
+    font-size: 2rem;
+  }
+
+  .contact-info {
+    padding: 25px 20px;
+  }
+
+  .contact-form {
+    padding: 25px 20px;
+  }
+
+  .feedback-list {
+    grid-template-columns: 1fr;
+  }
+
+  .rating-stars .star-btn {
+    font-size: 24px;
+  }
+
+  .rating-label {
+    font-size: 11px;
+  }
+}

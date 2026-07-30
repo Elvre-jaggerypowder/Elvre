@@ -1,0 +1,14 @@
+/* inside BuyNow.css, replace the .buy-now-logo block */
+.buy-now-logo {
+  width: 150px;
+  height: auto;
+  margin: 0 auto 10px;
+  display: block;
+}
+
+@media (max-width: 600px) {
+  .buy-now-logo {
+    width: 100px;
+    margin: 0 auto 5px;
+  }
+}

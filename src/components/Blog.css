@@ -1,0 +1,116 @@
+.blog-page {
+  min-height: 100vh;
+  background: #fffdf8;
+  padding-top: 100px;
+}
+
+.blog-hero {
+  text-align: center;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #263C28 0%, #3a5a3a 100%);
+  color: white;
+}
+
+.blog-hero h1 {
+  font-family: 'Livvicsemibold';
+  font-size: 3rem;
+  margin-bottom: 15px;
+}
+
+.blog-hero p {
+  font-family: 'centurygothic';
+  font-size: 1.2rem;
+}
+
+.blog-introduction {
+  max-width: 1100px;
+  margin: 50px auto;
+  padding: 40px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+}
+
+.intro-badge {
+  text-transform: uppercase;
+  color: #f1a40f;
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 2px;
+  margin-bottom: 15px;
+  font-family: 'Livvic', sans-serif;
+}
+
+.intro-title {
+  font-family: 'Livvicsemibold';
+  font-size: 2rem;
+  color: #263C28;
+  margin-bottom: 30px;
+}
+
+.blog-howmade {
+  max-width: 1100px;
+  margin: 0 auto 50px;
+  padding: 40px;
+  background: #f9f3e8;
+  border-radius: 20px;
+}
+
+.blog-howmade h2 {
+  font-family: 'Livvicsemibold';
+  font-size: 1.8rem;
+  color: #263C28;
+  margin-bottom: 20px;
+}
+
+.blog-howmade p,
+.intro-description {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 1rem;
+  line-height: 1.8;
+  color: #444;
+  text-align: justify;
+}
+
+.intro-images {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.intro-img {
+  width: 200px;
+  height: auto;
+  border-radius: 15px;
+  transition: transform 0.3s ease;
+}
+
+.intro-img:hover {
+  transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+  .blog-page {
+    padding-top: 80px;
+  }
+  
+  .blog-hero h1 {
+    font-size: 2rem;
+  }
+  
+  .blog-introduction,
+  .blog-howmade {
+    padding: 25px;
+    margin: 30px 15px;
+  }
+  
+  .intro-title {
+    font-size: 1.5rem;
+  }
+  
+  .intro-img {
+    width: 100px;
+  }
+}

@@ -1,0 +1,42 @@
+/* ========== GLOBAL APP STYLES ========== */
+.App {
+  width: 100%;
+  min-height: 100vh;
+  background: #fffdf8;
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  background: #fffdf8;
+}
+
+/* Consistent section spacing */
+section {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* No unwanted margins between sections */
+.hero-section + .stats-section,
+.stats-section + .about-section,
+.about-section + .product-carousel-section {
+  margin-top: 0;
+}
+
+/* Touch & hover improvements */
+@media (max-width: 768px) {
+  button,
+  .buy-now-btn,
+  .product-btn,
+  .join-movement-btn,
+  .follow-btn {
+    min-height: 48px;
+  }
+  a, button {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+}

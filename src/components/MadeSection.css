@@ -1,0 +1,134 @@
+.howmade-section {
+  padding: 80px 5%;
+  background: linear-gradient(135deg, #f9f3e8 0%, #fff8f0 100%);
+}
+
+.howmade-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.howmade-header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.howmade-tag {
+  font-family: 'Livvic', sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 3px;
+  color: #f1a40f;
+  text-transform: uppercase;
+  display: inline-block;
+  margin-bottom: 15px;
+}
+
+.howmade-heading {
+  font-family: 'Livvicsemibold', sans-serif;
+  font-size: 2.5rem;
+  color: #263C28;
+  margin-bottom: 20px;
+  position: relative;
+  display: inline-block;
+}
+
+.howmade-heading::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: #f1a40f;
+  border-radius: 2px;
+}
+
+.howmade-steps {
+  display: flex;
+  justify-content: space-between;
+  gap: 30px;
+  margin-bottom: 50px;
+  flex-wrap: wrap;
+}
+
+.step {
+  flex: 1;
+  min-width: 200px;
+  text-align: center;
+  padding: 25px 20px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+  transition: transform 0.3s ease;
+}
+
+.step:hover {
+  transform: translateY(-5px);
+}
+
+.step-number {
+  width: 50px;
+  height: 50px;
+  background: #f1a40f;
+  color: white;
+  font-family: 'Livvicsemibold', sans-serif;
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin: 0 auto 15px;
+}
+
+.step h3 {
+  font-family: 'Livvicsemibold', sans-serif;
+  font-size: 1.2rem;
+  color: #263C28;
+  margin-bottom: 10px;
+}
+
+.step p {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+.howmade-description {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 1rem;
+  line-height: 1.8;
+  color: #444;
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 30px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+}
+
+@media (max-width: 768px) {
+  .howmade-section {
+    padding: 50px 5%;
+  }
+  
+  .howmade-heading {
+    font-size: 1.8rem;
+  }
+  
+  .howmade-steps {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .step {
+    min-width: auto;
+  }
+  
+  .howmade-description {
+    padding: 20px;
+    font-size: 0.9rem;
+  }
+}

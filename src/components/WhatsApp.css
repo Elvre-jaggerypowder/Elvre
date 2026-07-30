@@ -1,0 +1,71 @@
+/* ============================================
+   FILE: src/components/WhatsApp.css
+   ============================================ */
+.whatsapp-button {
+  position: fixed;
+  bottom: 120px;           /* ✅ 40px higher than before (80px → 120px) */
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #25D366;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+  z-index: 998;
+}
+
+.whatsapp-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.whatsapp-button img {
+  width: 2rem;
+  height: 2rem;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .whatsapp-button {
+    bottom: 116px;          /* ✅ 40px higher (76px → 116px) */
+    right: 15px;
+    width: 50px;
+    height: 50px;
+  }
+  
+  .whatsapp-button img {
+    width: 1.7rem;
+    height: 1.7rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .whatsapp-button {
+    bottom: 110px;          /* ✅ 40px higher (70px → 110px) */
+    right: 12px;
+    width: 45px;
+    height: 45px;
+  }
+  
+  .whatsapp-button img {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+}
+
+/* ===== HIDE WHATSAPP WHEN MOBILE MENU OPEN ===== */
+.mobile-menu-open .whatsapp-button {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Ensure proper z-index on mobile */
+@media (max-width: 968px) {
+  .whatsapp-button {
+    z-index: 998 !important;
+  }
+}

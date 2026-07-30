@@ -1,0 +1,276 @@
+/* ============================================
+   ELVRE - Product Carousel (Premium Green + Brown)
+   ============================================ */
+
+/* ---- Section Background ---- */
+.product-carousel-section {
+  padding: 80px 20px;
+  background: linear-gradient(180deg, #FAF8F5 0%, #F5EDE0 100%);
+  /* Light Brown to Cream gradient */
+}
+
+/* ---- Header ---- */
+.product-carousel-header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.product-carousel-title {
+  font-family: 'Livvicsemibold', sans-serif;
+  font-size: 2.6rem;
+  color: #2E5A2E;
+  /* Dark Green */
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+
+.product-carousel-title span {
+  color: #6D4C2A;
+  /* Brown highlight */
+}
+
+.product-carousel-subtitle {
+  font-family: 'centurygothic', sans-serif;
+  font-size: 1.1rem;
+  color: #7A6B5A;
+  /* Muted Brown */
+  letter-spacing: 1px;
+  font-weight: 300;
+}
+
+/* ---- Swiper Container ---- */
+.product-swiper {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 20px 40px;
+}
+
+/* ============================================
+   PRODUCT CARD - Premium Look
+   ============================================ */
+.product-card {
+  background: #FFFFFF;
+  border-radius: 24px;
+  padding: 25px 20px 30px;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(46, 90, 46, 0.06);
+  border: 1px solid rgba(109, 76, 42, 0.08);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  /* Badge ke liye */
+  overflow: hidden;
+}
+
+/* ---- Hover Effect (Premium Lift) ---- */
+.product-card:hover {
+  transform: translateY(-12px);
+  box-shadow: 0 25px 50px rgba(46, 90, 46, 0.12);
+  border-color: #E8F5E9;
+  /* Light Green border on hover */
+}
+
+/* ---- Organic Badge (Top-Left corner) ---- */
+.product-card::before {
+  content: "🌿 100% Natural";
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  background: #E8F5E9;
+  /* Light Green */
+  color: #2E5A2E;
+  /* Dark Green text */
+  font-family: 'centurygothic', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 4px 14px;
+  border-radius: 50px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(46, 90, 46, 0.1);
+}
+
+/* ---- Product Image ---- */
+.product-image {
+  width: 100%;
+  max-width: 180px;
+  height: auto;
+  margin: 10px auto 20px;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.04));
+}
+
+/* ---- Product Name ---- */
+.product-name {
+  font-family: 'Livvicsemibold', sans-serif;
+  font-size: 1.3rem;
+  color: #2D2D2D;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+/* ---- Description ---- */
+.product-description {
+  font-family: 'centurygothic', sans-serif;
+  font-size: 0.9rem;
+  color: #7A6B5A;
+  /* Brownish-grey */
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+/* ---- Price ---- */
+.product-price {
+  font-family: 'Livvicsemibold', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #6D4C2A;
+  /* Primary Brown */
+  margin-bottom: 12px;
+}
+.product-price small {
+  font-size: 0.9rem;
+  color: #A0927B;
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+/* ---- Stock Status ---- */
+.product-stock {
+  margin-bottom: 18px;
+  font-size: 0.85rem;
+}
+.in-stock {
+  color: #2E5A2E;
+  /* Green */
+  font-family: 'centurygothic', sans-serif;
+  font-weight: 600;
+}
+.in-stock::before {
+  content: "● ";
+  font-size: 0.6rem;
+  vertical-align: middle;
+}
+.out-of-stock {
+  color: #B85C4A;
+  /* Muted Red-Brown */
+  font-family: 'centurygothic', sans-serif;
+}
+
+/* ============================================
+   BUTTONS - Brown & Green Theme
+   ============================================ */
+
+/* ---- Base Button Style ---- */
+.product-btn {
+  border: none;
+  padding: 12px 24px;
+  border-radius: 50px;
+  /* Pill shape */
+  font-family: 'Livvic', sans-serif;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 4px 6px;
+  letter-spacing: 0.3px;
+}
+
+/* ---- Add to Cart (Brown) ---- */
+.add-to-cart-btn {
+  background-color: #6D4C2A;
+  /* Primary Brown */
+  color: #FFFFFF;
+  box-shadow: 0 4px 15px rgba(109, 76, 42, 0.2);
+}
+.add-to-cart-btn:hover {
+  background-color: #4D341D;
+  /* Darker Brown */
+  transform: scale(1.05);
+  box-shadow: 0 8px 25px rgba(109, 76, 42, 0.3);
+}
+
+/* ---- Buy Now (Green) ---- */
+.buy-now-btn-small {
+  background-color: #2E5A2E;
+  /* Primary Green */
+  color: #FFFFFF;
+  box-shadow: 0 4px 15px rgba(46, 90, 46, 0.2);
+}
+.buy-now-btn-small:hover {
+  background-color: #1E3E1E;
+  /* Darker Green */
+  transform: scale(1.05);
+  box-shadow: 0 8px 25px rgba(46, 90, 46, 0.3);
+}
+
+/* ---- Wishlist/Icon Button (Outline) ---- */
+.product-btn-outline {
+  background: transparent;
+  border: 1.5px solid #D4C9BC;
+  color: #6D4C2A;
+  padding: 10px 14px;
+  border-radius: 50%;
+  /* Circular */
+  font-size: 1.1rem;
+  transition: 0.3s;
+}
+.product-btn-outline:hover {
+  border-color: #6D4C2A;
+  background: #F5EDE0;
+  transform: translateY(-2px);
+}
+
+/* ============================================
+   RESPONSIVE (Mobile)
+   ============================================ */
+@media (max-width: 768px) {
+  .product-carousel-section {
+    padding: 50px 15px;
+  }
+
+  .product-carousel-title {
+    font-size: 2rem;
+  }
+  .product-carousel-title span {
+    display: block;
+    /* Mobile pe span ko nayi line pe lao */
+  }
+
+  .product-swiper {
+    padding: 10px 10px;
+  }
+
+  .product-card {
+    padding: 18px 12px 22px;
+    border-radius: 18px;
+  }
+  
+  /* Badge chhota karo mobile pe */
+  .product-card::before {
+    font-size: 0.55rem;
+    top: 10px;
+    left: 10px;
+    padding: 3px 10px;
+  }
+
+  .product-image {
+    max-width: 130px;
+  }
+
+  .product-name {
+    font-size: 1.1rem;
+  }
+  .product-price {
+    font-size: 1.3rem;
+  }
+
+  .product-btn {
+    padding: 10px 18px;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-card::before {
+    content: "🌿 Natural";
+    /* Chhoti screen pe short text */
+  }
+}

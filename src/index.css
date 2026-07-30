@@ -1,0 +1,250 @@
+/* ============================================
+   GLOBAL FONT - TIMES NEW ROMAN (AAPKI MARZI)
+   ============================================ */
+/* ✅ Yeh line maine bilkul nahi badali - Times New Roman hi rahega */
+body,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+span,
+div,
+li,
+a,
+button,
+input,
+textarea,
+select,
+label,
+option,
+article,
+section,
+header,
+footer,
+nav,
+main {
+  font-family: 'Times New Roman', Times, serif !important;
+}
+
+/* Keep icon fonts safe */
+.react-icons,
+.fa,
+.fas,
+.far,
+.fab,
+.fal,
+.fad,
+.fa-solid,
+.fa-regular,
+.fa-brands,
+svg:not(.exclude-font) {
+  font-family: inherit !important;
+}
+
+/* ============================================
+   THEME COLORS - GREEN + BROWN (Aapke colors)
+   ============================================ */
+:root {
+  --primary-green: #1a2e1e;
+  --primary-green-light: #2a4a2e;
+  --primary-brown: #8B5E3C;
+  --primary-brown-light: #a87a54;
+  --primary-brown-dark: #6d4a2e;
+  --gold: #f1a40f;
+  --gold-dark: #d4910e;
+  --white: #ffffff;
+  --light-bg: #f9f3e8;
+  --gray-light: #f5f5f5;
+  --text-dark: #1a1a1a;
+  --text-light: #666666;
+  
+  /* ⭐ NEW - Premium ke liye extra colors */
+  --cream-bg: #FCF9F5;
+  --shadow-soft: 0 8px 30px rgba(26, 46, 30, 0.08);
+  --shadow-hover: 0 15px 45px rgba(139, 94, 60, 0.15);
+  --border-radius-card: 20px;
+}
+
+/* ============================================
+   GLOBAL RESET & BASE (Premium look ke liye)
+   ============================================ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  /* ⭐ Organic feel ke liye soft gradient background */
+  background: linear-gradient(180deg, #FCF9F5 0%, #F5EDE0 100%);
+  color: var(--text-dark);
+  line-height: 1.7; /* Thoda space do, premium lagega */
+  min-height: 100vh;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s ease;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ============================================
+   GLOBAL CARD / CONTAINER (Premium Shadow)
+   ============================================ */
+.card-premium {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  border-radius: var(--border-radius-card);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(139, 94, 60, 0.1);
+  padding: 25px;
+  transition: all 0.4s ease;
+}
+
+.card-premium:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--primary-brown-light);
+}
+
+/* ============================================
+   BUTTONS - Premium & Organic
+   ============================================ */
+.btn-primary {
+  background: var(--primary-brown);
+  color: white;
+  border: none;
+  padding: 14px 36px; /* Thoda bada */
+  border-radius: 50px; /* Poora round */
+  cursor: pointer;
+  transition: all 0.4s ease;
+  font-weight: 700; /* Bold */
+  letter-spacing: 1px;
+  box-shadow: 0 4px 15px rgba(139, 94, 60, 0.2);
+}
+
+.btn-primary:hover {
+  background: var(--primary-brown-dark);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 10px 30px rgba(139, 94, 60, 0.35);
+}
+
+.btn-secondary {
+  background: var(--gold);
+  color: var(--primary-green);
+  border: none;
+  padding: 14px 36px;
+  border-radius: 50px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: all 0.4s ease;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 15px rgba(241, 164, 15, 0.25);
+}
+
+.btn-secondary:hover {
+  background: var(--gold-dark);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 10px 30px rgba(241, 164, 15, 0.4);
+}
+
+/* Outline Button (Naya add kiya) */
+.btn-outline {
+  background: transparent;
+  border: 2px solid var(--primary-brown);
+  color: var(--primary-brown);
+  padding: 12px 32px;
+  border-radius: 50px;
+  font-weight: 600;
+  transition: 0.4s ease;
+  cursor: pointer;
+}
+
+.btn-outline:hover {
+  background: var(--primary-brown);
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* ============================================
+   SECTION HEADERS - Premium feel
+   ============================================ */
+.section-title {
+  color: var(--primary-green);
+  font-size: 2.6rem; /* Thoda bada */
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px; /* Times mein accha lagta hai */
+  position: relative;
+}
+
+/* Title ke neeche decorative line (Golden) */
+.section-title::after {
+  content: '';
+  display: block;
+  width: 70px;
+  height: 4px;
+  background: var(--gold);
+  margin: 12px auto 0;
+  border-radius: 4px;
+}
+
+.section-subtitle {
+  color: var(--primary-brown-light);
+  font-size: 1.1rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* ============================================
+   CONTAINER
+   ============================================ */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ============================================
+   RESPONSIVE (Mobile friendly)
+   ============================================ */
+@media (max-width: 768px) {
+  .section-title {
+    font-size: 2rem;
+  }
+  .section-title::after {
+    width: 50px;
+  }
+  .section-subtitle {
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+  }
+  .btn-primary, .btn-secondary {
+    padding: 12px 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .section-title {
+    font-size: 1.6rem;
+  }
+  .card-premium {
+    padding: 15px;
+  }
+}

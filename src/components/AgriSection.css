@@ -1,0 +1,206 @@
+.modern-agriculture-section {
+  background: linear-gradient(135deg, #fffdf8 0%, #f5f0e8 100%);
+  overflow: hidden;
+}
+
+/* FULL SIZE IMAGE AT TOP - like hero section */
+.agri-image-full {
+  width: 100%;
+  height: 60vh;
+  min-height: 400px;
+  overflow: hidden;
+}
+
+.agri-grass-full {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* Content wrapper */
+.agri-content-wrapper {
+  padding: 60px 5%;
+}
+
+.agri-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.agri-content {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.agri-tag {
+  font-family: 'Livvic', sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 3px;
+  color: #f1a40f;
+  text-transform: uppercase;
+  display: inline-block;
+  margin-bottom: 15px;
+}
+
+.agri-heading {
+  font-family: 'Livvicsemibold', sans-serif;
+  font-size: 2.3rem;
+  color: #263C28;
+  margin-bottom: 40px;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.agri-highlights {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 30px;
+  margin-bottom: 45px;
+}
+
+.highlight-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 20px;
+  background: white;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.highlight-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.highlight-icon {
+  font-size: 2.2rem;
+}
+
+.highlight-item h4 {
+  font-family: 'Livvicsemibold', sans-serif;
+  font-size: 1.1rem;
+  color: #263C28;
+  margin-bottom: 8px;
+}
+
+.highlight-item p {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+.agri-description {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 1rem;
+  line-height: 1.9;
+  color: #444;
+  text-align: justify;
+  background: white;
+  padding: 35px;
+  border-radius: 20px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+/* ===== RESPONSIVE - ALL DEVICES ===== */
+
+/* Mobile Phones */
+@media (max-width: 768px) {
+  .agri-image-full {
+    height: 40vh;
+    min-height: 250px;
+  }
+  
+  .agri-content-wrapper {
+    padding: 40px 4%;
+  }
+  
+  .agri-heading {
+    font-size: 1.6rem;
+    margin-bottom: 25px;
+  }
+  
+  .agri-highlights {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .highlight-item {
+    padding: 15px;
+  }
+  
+  .highlight-icon {
+    font-size: 1.6rem;
+  }
+  
+  .highlight-item h4 {
+    font-size: 0.95rem;
+  }
+  
+  .agri-description {
+    padding: 20px;
+    font-size: 0.85rem;
+    line-height: 1.7;
+  }
+}
+
+/* Tablets */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .agri-image-full {
+    height: 50vh;
+    min-height: 350px;
+  }
+  
+  .agri-content-wrapper {
+    padding: 50px 5%;
+  }
+  
+  .agri-heading {
+    font-size: 2rem;
+  }
+  
+  .agri-highlights {
+    gap: 20px;
+  }
+  
+  .highlight-item {
+    padding: 15px;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1025px) and (max-width: 1440px) {
+  .agri-image-full {
+    height: 55vh;
+  }
+  
+  .agri-heading {
+    font-size: 2.1rem;
+  }
+}
+
+/* Large Desktop */
+@media (min-width: 1441px) {
+  .agri-image-full {
+    height: 65vh;
+  }
+  
+  .agri-heading {
+    font-size: 2.5rem;
+  }
+  
+  .agri-description {
+    font-size: 1.05rem;
+  }
+}
+
+/* iOS Specific */
+@supports (-webkit-touch-callout: none) {
+  .agri-grass-full {
+    transform: translateZ(0);
+  }
+}

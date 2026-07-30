@@ -1,0 +1,277 @@
+/* ============================================
+   USER SIGNUP - ELVRE THEME (Green + Brown)
+   ============================================ */
+
+.user-signup-container {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* ✅ Organic green-brown gradient */
+  background: linear-gradient(160deg, #f9f3e8 0%, #e8f0e5 40%, #f5ede0 100%);
+  padding: 120px 20px 60px;
+}
+
+.user-signup-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  padding: 45px 40px;
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(26, 46, 30, 0.10);
+  width: 100%;
+  max-width: 500px;
+  border: 1px solid rgba(139, 94, 60, 0.10);
+  transition: all 0.3s ease;
+}
+
+.user-signup-card:hover {
+  box-shadow: 0 25px 70px rgba(139, 94, 60, 0.12);
+}
+
+.user-signup-card h2 {
+  color: var(--primary-green, #1a2e1e);
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  text-align: center;
+  letter-spacing: -0.5px;
+}
+
+/* Decorative line under heading */
+.user-signup-card h2::after {
+  content: '';
+  display: block;
+  width: 50px;
+  height: 3px;
+  background: var(--gold, #f1a40f);
+  margin: 10px auto 0;
+  border-radius: 4px;
+}
+
+.user-signup-card > p {
+  color: var(--primary-brown, #8B5E3C);
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 30px;
+  margin-top: 8px;
+  letter-spacing: 1px;
+}
+
+/* ============================================
+   FORM GROUPS
+   ============================================ */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  color: var(--text-dark, #1a1a1a);
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e8e0d6;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: #fcfaf7;
+  color: #1a1a1a;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--primary-green, #1a2e1e);
+  box-shadow: 0 0 0 4px rgba(26, 46, 30, 0.06);
+  background: white;
+}
+
+.form-group input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-hint {
+  display: block;
+  color: var(--text-light, #666);
+  font-size: 0.75rem;
+  margin-top: 4px;
+}
+
+/* ============================================
+   ⭐ PASSWORD INPUT WITH EYE BUTTON - YE ADD KIYA HAI
+   ============================================ */
+.password-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-input-wrapper input {
+  padding-right: 50px !important; /* Eye button ke liye space */
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-light, #666);
+  font-size: 1.2rem;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  border-radius: 50%;
+}
+
+.password-toggle-btn:hover {
+  color: var(--primary-brown, #8B5E3C);
+  background: rgba(139, 94, 60, 0.06);
+}
+
+.password-toggle-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ============================================
+   SIGNUP BUTTON (Premium)
+   ============================================ */
+.signup-btn {
+  width: 100%;
+  padding: 16px;
+  background: var(--primary-brown, #8B5E3C);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.5px;
+  margin-top: 10px;
+  box-shadow: 0 4px 20px rgba(139, 94, 60, 0.20);
+}
+
+.signup-btn:hover:not(:disabled) {
+  background: var(--primary-brown-dark, #6d4a2e);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(139, 94, 60, 0.30);
+}
+
+.signup-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ============================================
+   MESSAGES (Error + Success)
+   ============================================ */
+.error-message {
+  background: #fde8e8;
+  color: #c0392b;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 18px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-left: 4px solid #c0392b;
+}
+
+.success-message {
+  background: #e8f5e9;
+  color: var(--primary-green, #1a2e1e);
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 18px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-left: 4px solid var(--primary-green, #1a2e1e);
+}
+
+/* ============================================
+   LOGIN LINK
+   ============================================ */
+.login-link {
+  text-align: center;
+  margin-top: 25px;
+  font-size: 0.95rem;
+  color: var(--text-light, #666);
+}
+
+.login-link a {
+  color: var(--primary-brown, #8B5E3C);
+  font-weight: 700;
+  transition: all 0.3s ease;
+  border-bottom: 2px solid transparent;
+}
+
+.login-link a:hover {
+  color: var(--primary-green, #1a2e1e);
+  border-bottom-color: var(--gold, #f1a40f);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 600px) {
+  .user-signup-container {
+    padding: 100px 16px 40px;
+  }
+
+  .user-signup-card {
+    padding: 30px 20px;
+    border-radius: 20px;
+  }
+
+  .user-signup-card h2 {
+    font-size: 1.6rem;
+  }
+
+  .user-signup-card > p {
+    font-size: 0.85rem;
+  }
+
+  .form-group input {
+    padding: 12px 14px;
+    font-size: 16px; /* iOS zoom fix */
+  }
+
+  .signup-btn {
+    padding: 14px;
+    font-size: 0.95rem;
+  }
+
+  /* ✅ Mobile mein eye button adjust */
+  .password-input-wrapper input {
+    padding-right: 40px !important;
+  }
+
+  .password-toggle-btn {
+    right: 12px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .user-signup-card {
+    padding: 20px 16px;
+  }
+
+  .user-signup-card h2 {
+    font-size: 1.4rem;
+  }
+}
