@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from '../supabaseClient';
-import AdminAnalytics from "./AdminAnalytics"; // ✅ ADD THIS
+import AdminAnalytics from "./AdminAnalytics";
 import "./AdminDashboard.css";
 
 const AdminDashboard = () => {
@@ -16,6 +16,7 @@ const AdminDashboard = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("success");
   const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
@@ -46,7 +47,7 @@ const AdminDashboard = () => {
     usageLimit: 0
   });
   
-  // ─── PRODUCT FORM STATE (including variants) ───
+  // ─── PRODUCT FORM STATE ───
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -54,7 +55,7 @@ const AdminDashboard = () => {
     stock: "",
     image: "",
     category: "jaggery",
-    variants: []  // array of { label, price, stock }
+    variants: []
   });
 
   // ─── AUTH CHECK ───
@@ -67,69 +68,40 @@ const AdminDashboard = () => {
 
   // ─── LOAD ALL DATA ───
   useEffect(() => {
-    loadProducts();
-    loadOrders();
-    loadUsers();
-    loadFeedbacks();
-    loadCoupons();
-    loadAllReviews();
-    loadContactInfo();
+    loadAllData();
   }, []);
 
-  // ─── REAL‑TIME SUBSCRIPTIONS ───
-  useEffect(() => {
-    const sub = supabase
-      .channel('products-channel')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => loadProducts())
-      .subscribe();
-    return () => sub.unsubscribe();
-  }, []);
+  const loadAllData = async () => {
+    setLoading(true);
+    try {
+      await Promise.all([
+        loadProducts(),
+        loadOrders(),
+        loadUsers(),
+        loadFeedbacks(),
+        loadCoupons(),
+        loadAllReviews(),
+        loadContactInfo()
+      ]);
+    } catch (err) {
+      console.error("Error loading data:", err);
+      showMessage("Error loading data. Please refresh.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  useEffect(() => {
-    const sub = supabase
-      .channel('orders-channel')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => loadOrders())
-      .subscribe();
-    return () => sub.unsubscribe();
-  }, []);
+  // ─── SHOW MESSAGE (improved) ───
+  const showMessage = (text, type = "success") => {
+    setMessage(text);
+    setMessageType(type);
+    setTimeout(() => {
+      setMessage("");
+      setMessageType("success");
+    }, 4000);
+  };
 
-  useEffect(() => {
-    const sub = supabase
-      .channel('users-channel')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'users' }, (payload) => {
-        setUsers(prev => [payload.new, ...prev]);
-      })
-      .subscribe();
-    return () => sub.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    const sub = supabase
-      .channel('feedbacks-channel')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Feedbacks' }, (payload) => {
-        setFeedbacks(prev => [payload.new, ...prev]);
-      })
-      .subscribe();
-    return () => sub.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    const sub = supabase
-      .channel('reviews-channel')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'reviews' }, () => loadAllReviews())
-      .subscribe();
-    return () => sub.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    const sub = supabase
-      .channel('coupons-channel')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'coupons' }, () => loadCoupons())
-      .subscribe();
-    return () => sub.unsubscribe();
-  }, []);
-
-  // ─── LOAD PRODUCTS (with variants) ───
+  // ─── LOAD PRODUCTS ───
   const loadProducts = async () => {
     try {
       const { data, error } = await supabase
@@ -137,12 +109,7 @@ const AdminDashboard = () => {
         .select('*')
         .order('id', { ascending: true });
       
-      if (error) {
-        console.error('❌ Supabase load products error:', error);
-        const saved = localStorage.getItem("elvreProducts");
-        if (saved) setProducts(JSON.parse(saved));
-        return;
-      }
+      if (error) throw error;
       
       if (data && data.length > 0) {
         const formatted = data.map(p => ({
@@ -159,18 +126,12 @@ const AdminDashboard = () => {
           variants: p.variants || []
         }));
         setProducts(formatted);
-        localStorage.setItem("elvreProducts", JSON.stringify(formatted));
       } else {
-        const saved = localStorage.getItem("elvreProducts");
-        if (saved) setProducts(JSON.parse(saved));
-        else setProducts([]);
+        setProducts([]);
       }
     } catch (err) {
       console.error('❌ Error loading products:', err);
-      const saved = localStorage.getItem("elvreProducts");
-      if (saved) setProducts(JSON.parse(saved));
-    } finally {
-      setLoading(false);
+      showMessage("Failed to load products: " + err.message, "error");
     }
   };
 
@@ -182,6 +143,7 @@ const AdminDashboard = () => {
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
+      
       if (data && data.length > 0) {
         const formatted = data.map(order => ({
           id: order.id,
@@ -201,16 +163,12 @@ const AdminDashboard = () => {
           orderTime: order.order_time
         }));
         setOrders(formatted);
-        localStorage.setItem("elvreOrders", JSON.stringify(formatted));
       } else {
-        const saved = localStorage.getItem("elvreOrders");
-        if (saved) setOrders(JSON.parse(saved));
-        else setOrders([]);
+        setOrders([]);
       }
     } catch (err) {
       console.error('Error loading orders:', err);
-      const saved = localStorage.getItem("elvreOrders");
-      if (saved) setOrders(JSON.parse(saved));
+      showMessage("Failed to load orders: " + err.message, "error");
     }
   };
 
@@ -222,6 +180,7 @@ const AdminDashboard = () => {
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
+      
       if (data && data.length > 0) {
         const formatted = data.map(user => ({
           id: user.id,
@@ -232,15 +191,12 @@ const AdminDashboard = () => {
           orders: orders.filter(o => o.email === user.email).length
         }));
         setUsers(formatted);
-        localStorage.setItem("users", JSON.stringify(formatted));
       } else {
-        const saved = JSON.parse(localStorage.getItem("users") || "[]");
-        setUsers(saved);
+        setUsers([]);
       }
     } catch (err) {
       console.error('Error loading users:', err);
-      const saved = JSON.parse(localStorage.getItem("users") || "[]");
-      setUsers(saved);
+      showMessage("Failed to load users: " + err.message, "error");
     }
   };
 
@@ -252,17 +208,15 @@ const AdminDashboard = () => {
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
+      
       if (data && data.length > 0) {
         setFeedbacks(data);
-        localStorage.setItem("feedbacks", JSON.stringify(data));
       } else {
-        const saved = JSON.parse(localStorage.getItem("feedbacks") || "[]");
-        setFeedbacks(saved);
+        setFeedbacks([]);
       }
     } catch (err) {
       console.error('Error loading feedbacks:', err);
-      const saved = JSON.parse(localStorage.getItem("feedbacks") || "[]");
-      setFeedbacks(saved);
+      showMessage("Failed to load feedbacks: " + err.message, "error");
     }
   };
 
@@ -274,17 +228,15 @@ const AdminDashboard = () => {
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
+      
       if (data && data.length > 0) {
         setCoupons(data);
-        localStorage.setItem("elvreCoupons", JSON.stringify(data));
       } else {
-        const saved = JSON.parse(localStorage.getItem("elvreCoupons") || "[]");
-        setCoupons(saved);
+        setCoupons([]);
       }
     } catch (err) {
       console.error('Error loading coupons:', err);
-      const saved = JSON.parse(localStorage.getItem("elvreCoupons") || "[]");
-      setCoupons(saved);
+      showMessage("Failed to load coupons: " + err.message, "error");
     }
   };
 
@@ -296,6 +248,7 @@ const AdminDashboard = () => {
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
+      
       if (data && data.length > 0) {
         const formatted = data.map(review => ({
           ...review,
@@ -304,67 +257,85 @@ const AdminDashboard = () => {
         }));
         setAllReviews(formatted);
       } else {
-        const reviewsList = [];
-        const savedProducts = JSON.parse(localStorage.getItem("elvreProducts") || "[]");
-        savedProducts.forEach(product => {
-          const productReviews = localStorage.getItem(`reviews_${product.id}`);
-          if (productReviews) {
-            const reviews = JSON.parse(productReviews);
-            reviews.forEach(review => {
-              reviewsList.push({
-                ...review,
-                productId: product.id,
-                productName: product.name,
-                productImage: product.image
-              });
-            });
-          }
-        });
-        setAllReviews(reviewsList);
+        setAllReviews([]);
       }
     } catch (err) {
       console.error('Error loading reviews:', err);
+      showMessage("Failed to load reviews: " + err.message, "error");
     }
   };
 
-  // ─── CONTACT INFO ───
-  const loadContactInfo = () => {
-    const saved = localStorage.getItem("contactInfo");
-    if (saved) {
-      setContactInfo(JSON.parse(saved));
-      setContactFormData(JSON.parse(saved));
-    } else {
-      const defaultInfo = {
-        phone1: "+91 7060998050",
-        phone2: "+91 7906396629",
-        email: "elvreofficals@gmail.com",
-        address: "1st Floor, Sangam Tent House, Jawalapur, Haridwar, Uttrakhand, 249407"
-      };
-      setContactInfo(defaultInfo);
-      setContactFormData(defaultInfo);
-      localStorage.setItem("contactInfo", JSON.stringify(defaultInfo));
+  // ─── CONTACT INFO (Supabase se) ───
+  const loadContactInfo = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('contact_info')
+        .select('*')
+        .limit(1);
+      
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        const info = data[0];
+        setContactInfo({
+          phone1: info.phone1,
+          phone2: info.phone2,
+          email: info.email,
+          address: info.address
+        });
+        setContactFormData({
+          phone1: info.phone1,
+          phone2: info.phone2,
+          email: info.email,
+          address: info.address
+        });
+      } else {
+        // Default data agar table khali ho
+        const defaultInfo = {
+          phone1: "+91 7060998050",
+          phone2: "+91 7906396629",
+          email: "elvreofficals@gmail.com",
+          address: "1st Floor, Sangam Tent House, Jawalapur, Haridwar, Uttrakhand, 249407"
+        };
+        setContactInfo(defaultInfo);
+        setContactFormData(defaultInfo);
+      }
+    } catch (err) {
+      console.error('Error loading contact info:', err);
     }
   };
 
-  const saveContactInfo = () => {
+  // ─── SAVE CONTACT INFO ───
+  const saveContactInfo = async () => {
     if (!contactFormData.phone1 || !contactFormData.email || !contactFormData.address) {
-      setMessage("Please fill all required fields");
+      showMessage("Please fill all required fields", "error");
       return;
     }
-    localStorage.setItem("contactInfo", JSON.stringify(contactFormData));
-    setContactInfo(contactFormData);
-    setEditContactMode(false);
-    setMessage("Contact information updated successfully!");
-    setTimeout(() => setMessage(""), 3000);
+
+    try {
+      const { error } = await supabase
+        .from('contact_info')
+        .update({
+          phone1: contactFormData.phone1,
+          phone2: contactFormData.phone2,
+          email: contactFormData.email,
+          address: contactFormData.address,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', 1);
+
+      if (error) throw error;
+
+      setContactInfo(contactFormData);
+      setEditContactMode(false);
+      showMessage("Contact information updated successfully!", "success");
+    } catch (err) {
+      console.error('Error updating contact info:', err);
+      showMessage("Failed to update contact info: " + err.message, "error");
+    }
   };
 
-  const saveProducts = (updatedProducts) => {
-    localStorage.setItem("elvreProducts", JSON.stringify(updatedProducts));
-    setProducts(updatedProducts);
-    window.dispatchEvent(new Event("productsUpdated"));
-  };
-
-  // ─── ORDER STATUS & PAYMENT ───
+  // ─── ORDER STATUS ───
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
       const { error } = await supabase
@@ -372,18 +343,19 @@ const AdminDashboard = () => {
         .update({ status: newStatus })
         .eq('id', orderId);
       if (error) throw error;
+
+      const updatedOrders = orders.map(order =>
+        order.id === orderId ? { ...order, status: newStatus } : order
+      );
+      setOrders(updatedOrders);
+      showMessage(`Order ${orderId} status updated to ${newStatus}`, "success");
     } catch (err) {
-      console.error('Supabase error:', err);
+      console.error('Error updating order:', err);
+      showMessage("Failed to update order: " + err.message, "error");
     }
-    const updatedOrders = orders.map(order =>
-      order.id === orderId ? { ...order, status: newStatus } : order
-    );
-    setOrders(updatedOrders);
-    localStorage.setItem("elvreOrders", JSON.stringify(updatedOrders));
-    setMessage(`Order ${orderId} status updated to ${newStatus}`);
-    setTimeout(() => setMessage(""), 3000);
   };
 
+  // ─── PAYMENT STATUS ───
   const updatePaymentStatus = async (orderId, newPaymentStatus) => {
     try {
       const { error } = await supabase
@@ -391,24 +363,25 @@ const AdminDashboard = () => {
         .update({ payment_status: newPaymentStatus })
         .eq('id', orderId);
       if (error) throw error;
+
+      const updatedOrders = orders.map(order =>
+        order.id === orderId ? { ...order, paymentStatus: newPaymentStatus } : order
+      );
+      setOrders(updatedOrders);
+      showMessage(`Order ${orderId} payment status updated to ${newPaymentStatus}`, "success");
     } catch (err) {
-      console.error('Supabase error:', err);
+      console.error('Error updating payment:', err);
+      showMessage("Failed to update payment: " + err.message, "error");
     }
-    const updatedOrders = orders.map(order =>
-      order.id === orderId ? { ...order, paymentStatus: newPaymentStatus } : order
-    );
-    setOrders(updatedOrders);
-    localStorage.setItem("elvreOrders", JSON.stringify(updatedOrders));
-    setMessage(`Order ${orderId} payment status updated to ${newPaymentStatus}`);
-    setTimeout(() => setMessage(""), 3000);
   };
 
-  // ─── PRODUCT CRUD (with variants) ───
+  // ─── PRODUCT CRUD ───
   const handleAddProduct = async () => {
     if (!formData.name || !formData.priceValue || !formData.stock) {
-      setMessage("Please fill all required fields");
+      showMessage("Please fill all required fields", "error");
       return;
     }
+
     const newProduct = {
       id: Date.now(),
       name: formData.name,
@@ -427,24 +400,18 @@ const AdminDashboard = () => {
       const { error } = await supabase
         .from('products')
         .insert([newProduct]);
-      if (error) {
-        console.error('❌ Supabase insert error:', error);
-        setMessage("Product saved locally but not to cloud.");
-      } else {
-        console.log('✅ Product saved to Supabase');
-        setMessage("Product added successfully!");
-      }
+      
+      if (error) throw error;
+      
+      const formattedProduct = { ...newProduct, price: `₹${newProduct.price}` };
+      setProducts([...products, formattedProduct]);
+      setFormData({ name: "", description: "", priceValue: "", stock: "", image: "", category: "jaggery", variants: [] });
+      setShowAddForm(false);
+      showMessage("Product added successfully!", "success");
     } catch (err) {
-      console.error('❌ Error inserting product:', err);
-      setMessage("Error saving product. Please try again.");
+      console.error('❌ Error adding product:', err);
+      showMessage("Failed to add product: " + err.message, "error");
     }
-
-    const formattedProduct = { ...newProduct, price: `₹${newProduct.price}` };
-    const updatedProducts = [...products, formattedProduct];
-    saveProducts(updatedProducts);
-    setFormData({ name: "", description: "", priceValue: "", stock: "", image: "", category: "jaggery", variants: [] });
-    setShowAddForm(false);
-    setTimeout(() => setMessage(""), 3000);
   };
 
   const handleEditProduct = (product) => {
@@ -487,26 +454,21 @@ const AdminDashboard = () => {
           variants: updatedProduct.variants
         })
         .eq('id', editingProduct.id);
-      if (error) {
-        console.error('❌ Supabase update error:', error);
-        setMessage("Updated locally but not in cloud.");
-      } else {
-        console.log('✅ Product updated in Supabase');
-        setMessage("Product updated successfully!");
-      }
+      
+      if (error) throw error;
+
+      const updatedProducts = products.map(p =>
+        p.id === editingProduct.id ? { ...updatedProduct, price: `₹${updatedProduct.price}` } : p
+      );
+      setProducts(updatedProducts);
+      setEditingProduct(null);
+      setShowAddForm(false);
+      setFormData({ name: "", description: "", priceValue: "", stock: "", image: "", category: "jaggery", variants: [] });
+      showMessage("Product updated successfully!", "success");
     } catch (err) {
       console.error('❌ Error updating product:', err);
-      setMessage("Error updating product.");
+      showMessage("Failed to update product: " + err.message, "error");
     }
-
-    const updatedProducts = products.map(p =>
-      p.id === editingProduct.id ? { ...updatedProduct, price: `₹${updatedProduct.price}` } : p
-    );
-    saveProducts(updatedProducts);
-    setEditingProduct(null);
-    setShowAddForm(false);
-    setFormData({ name: "", description: "", priceValue: "", stock: "", image: "", category: "jaggery", variants: [] });
-    setTimeout(() => setMessage(""), 3000);
   };
 
   const handleDeleteProduct = async (id) => {
@@ -517,21 +479,16 @@ const AdminDashboard = () => {
         .from('products')
         .delete()
         .eq('id', id);
-      if (error) {
-        console.error('❌ Supabase delete error:', error);
-        setMessage("Deleted locally but not from cloud.");
-      } else {
-        console.log('✅ Product deleted from Supabase');
-        setMessage("Product deleted successfully!");
-      }
+      
+      if (error) throw error;
+
+      const updatedProducts = products.filter(p => p.id !== id);
+      setProducts(updatedProducts);
+      showMessage("Product deleted successfully!", "success");
     } catch (err) {
       console.error('❌ Error deleting product:', err);
-      setMessage("Error deleting product.");
+      showMessage("Failed to delete product: " + err.message, "error");
     }
-
-    const updatedProducts = products.filter(p => p.id !== id);
-    saveProducts(updatedProducts);
-    setTimeout(() => setMessage(""), 3000);
   };
 
   // ─── VARIANT HELPERS ───
@@ -556,13 +513,14 @@ const AdminDashboard = () => {
   // ─── COUPON CRUD ───
   const handleCreateCoupon = async () => {
     if (!newCoupon.code || !newCoupon.discount || !newCoupon.expiryDate) {
-      setMessage("Please fill all required fields");
+      showMessage("Please fill all required fields", "error");
       return;
     }
     if (coupons.find(c => c.code === newCoupon.code.toUpperCase())) {
-      setMessage("Coupon code already exists!");
+      showMessage("Coupon code already exists!", "error");
       return;
     }
+
     const coupon = {
       id: Date.now(),
       code: newCoupon.code.toUpperCase(),
@@ -576,59 +534,64 @@ const AdminDashboard = () => {
       active: true,
       created_at: new Date().toISOString()
     };
+
     try {
-      const { error } = await supabase.from('coupons').insert([coupon]);
+      const { error } = await supabase
+        .from('coupons')
+        .insert([coupon]);
+      
       if (error) throw error;
-      setMessage("Coupon created successfully!");
+
+      setCoupons([...coupons, coupon]);
+      setNewCoupon({ code: "", discount: "", type: "percentage", expiryDate: "", minOrder: 0, maxDiscount: 0, usageLimit: 0 });
+      showMessage("Coupon created successfully!", "success");
     } catch (err) {
-      console.error('Supabase error:', err);
-      setMessage("Error creating coupon.");
+      console.error('Error creating coupon:', err);
+      showMessage("Failed to create coupon: " + err.message, "error");
     }
-    const updatedCoupons = [...coupons, coupon];
-    setCoupons(updatedCoupons);
-    localStorage.setItem("elvreCoupons", JSON.stringify(updatedCoupons));
-    setNewCoupon({ code: "", discount: "", type: "percentage", expiryDate: "", minOrder: 0, maxDiscount: 0, usageLimit: 0 });
-    setTimeout(() => setMessage(""), 3000);
   };
 
   const toggleCouponStatus = async (couponId) => {
     const coupon = coupons.find(c => c.id === couponId);
     const newStatus = !coupon.active;
+
     try {
       const { error } = await supabase
         .from('coupons')
         .update({ active: newStatus })
         .eq('id', couponId);
+      
       if (error) throw error;
+
+      const updatedCoupons = coupons.map(c =>
+        c.id === couponId ? { ...c, active: newStatus } : c
+      );
+      setCoupons(updatedCoupons);
+      showMessage("Coupon status updated!", "success");
     } catch (err) {
-      console.error('Supabase error:', err);
+      console.error('Error updating coupon:', err);
+      showMessage("Failed to update coupon: " + err.message, "error");
     }
-    const updatedCoupons = coupons.map(c =>
-      c.id === couponId ? { ...c, active: newStatus } : c
-    );
-    setCoupons(updatedCoupons);
-    localStorage.setItem("elvreCoupons", JSON.stringify(updatedCoupons));
-    setMessage("Coupon status updated!");
-    setTimeout(() => setMessage(""), 2000);
   };
 
   const deleteCoupon = async (couponId) => {
     if (!window.confirm("Delete this coupon?")) return;
+
     try {
       const { error } = await supabase
         .from('coupons')
         .delete()
         .eq('id', couponId);
+      
       if (error) throw error;
-      setMessage("Coupon deleted!");
+
+      const updatedCoupons = coupons.filter(c => c.id !== couponId);
+      setCoupons(updatedCoupons);
+      showMessage("Coupon deleted!", "success");
     } catch (err) {
-      console.error('Supabase error:', err);
-      setMessage("Error deleting coupon.");
+      console.error('Error deleting coupon:', err);
+      showMessage("Failed to delete coupon: " + err.message, "error");
     }
-    const updatedCoupons = coupons.filter(c => c.id !== couponId);
-    setCoupons(updatedCoupons);
-    localStorage.setItem("elvreCoupons", JSON.stringify(updatedCoupons));
-    setTimeout(() => setMessage(""), 2000);
   };
 
   // ─── REVIEW MANAGEMENT ───
@@ -638,37 +601,38 @@ const AdminDashboard = () => {
         .from('reviews')
         .update({ approved: true, spam: false })
         .eq('id', reviewId);
+      
       if (error) throw error;
+
+      const updatedReviews = allReviews.map(r =>
+        r.id === reviewId ? { ...r, approved: true, spam: false } : r
+      );
+      setAllReviews(updatedReviews);
+      showMessage("Review approved!", "success");
     } catch (err) {
-      console.error('Supabase error:', err);
+      console.error('Error approving review:', err);
+      showMessage("Failed to approve review: " + err.message, "error");
     }
-    const productReviews = JSON.parse(localStorage.getItem(`reviews_${productId}`) || "[]");
-    const updatedReviews = productReviews.map(r =>
-      r.id === reviewId ? { ...r, approved: true, spam: false } : r
-    );
-    localStorage.setItem(`reviews_${productId}`, JSON.stringify(updatedReviews));
-    loadAllReviews();
-    setMessage("Review approved!");
-    setTimeout(() => setMessage(""), 2000);
   };
 
   const deleteReview = async (reviewId, productId) => {
     if (!window.confirm("Delete this review permanently?")) return;
+
     try {
       const { error } = await supabase
         .from('reviews')
         .delete()
         .eq('id', reviewId);
+      
       if (error) throw error;
+
+      const updatedReviews = allReviews.filter(r => r.id !== reviewId);
+      setAllReviews(updatedReviews);
+      showMessage("Review deleted!", "success");
     } catch (err) {
-      console.error('Supabase error:', err);
+      console.error('Error deleting review:', err);
+      showMessage("Failed to delete review: " + err.message, "error");
     }
-    const productReviews = JSON.parse(localStorage.getItem(`reviews_${productId}`) || "[]");
-    const updatedReviews = productReviews.filter(r => r.id !== reviewId);
-    localStorage.setItem(`reviews_${productId}`, JSON.stringify(updatedReviews));
-    loadAllReviews();
-    setMessage("Review deleted!");
-    setTimeout(() => setMessage(""), 2000);
   };
 
   const markAsSpam = async (reviewId, productId) => {
@@ -677,18 +641,18 @@ const AdminDashboard = () => {
         .from('reviews')
         .update({ spam: true, approved: false })
         .eq('id', reviewId);
+      
       if (error) throw error;
+
+      const updatedReviews = allReviews.map(r =>
+        r.id === reviewId ? { ...r, spam: true, approved: false } : r
+      );
+      setAllReviews(updatedReviews);
+      showMessage("Review marked as spam!", "success");
     } catch (err) {
-      console.error('Supabase error:', err);
+      console.error('Error marking review as spam:', err);
+      showMessage("Failed to mark review as spam: " + err.message, "error");
     }
-    const productReviews = JSON.parse(localStorage.getItem(`reviews_${productId}`) || "[]");
-    const updatedReviews = productReviews.map(r =>
-      r.id === reviewId ? { ...r, spam: true, approved: false } : r
-    );
-    localStorage.setItem(`reviews_${productId}`, JSON.stringify(updatedReviews));
-    loadAllReviews();
-    setMessage("Review marked as spam!");
-    setTimeout(() => setMessage(""), 2000);
   };
 
   const handleLogout = () => {
@@ -753,12 +717,15 @@ const AdminDashboard = () => {
         <button className={activeTab === "customers" ? "tab-active" : "tab"} onClick={() => setActiveTab("customers")}>👥 Customers</button>
         <button className={activeTab === "feedbacks" ? "tab-active" : "tab"} onClick={() => setActiveTab("feedbacks")}>💬 Feedbacks</button>
         <button className={activeTab === "contact" ? "tab-active" : "tab"} onClick={() => setActiveTab("contact")}>📞 Contact Settings</button>
-        {/* ✅ ANALYTICS TAB ADDED */}
         <button className={activeTab === "analytics" ? "tab-active" : "tab"} onClick={() => setActiveTab("analytics")}>📊 Analytics</button>
       </div>
 
       <div className="admin-container">
-        {message && <div className="admin-message">{message}</div>}
+        {message && (
+          <div className={`admin-message ${messageType === "error" ? "admin-message-error" : "admin-message-success"}`}>
+            {message}
+          </div>
+        )}
 
         {activeTab === "dashboard" && (
           <>
@@ -768,17 +735,21 @@ const AdminDashboard = () => {
                 <table className="admin-table">
                   <thead><tr><th>Order ID</th><th>Customer</th><th>Amount</th><th>Status</th><th>Payment</th><th>Date</th><th>Action</th></tr></thead>
                   <tbody>
-                    {recentOrders.map(order => (
-                      <tr key={order.id}>
-                        <td>{order.id}</td>
-                        <td>{order.customer}</td>
-                        <td>₹{order.total}</td>
-                        <td><span className={`status-badge status-${order.status}`}>{order.status}</span></td>
-                        <td><span className={`payment-badge ${order.paymentStatus === "paid" ? "paid" : "pending"}`}>{order.paymentStatus || "pending"}</span></td>
-                        <td>{order.orderDate}</td>
-                        <td><button className="view-btn" onClick={() => { setSelectedOrder(order); setShowOrderModal(true); }}>View</button></td>
-                      </tr>
-                    ))}
+                    {recentOrders.length === 0 ? (
+                      <tr><td colSpan="7" className="no-data">No orders yet</td></tr>
+                    ) : (
+                      recentOrders.map(order => (
+                        <tr key={order.id}>
+                          <td>{order.id}</td>
+                          <td>{order.customer}</td>
+                          <td>₹{order.total}</td>
+                          <td><span className={`status-badge status-${order.status}`}>{order.status}</span></td>
+                          <td><span className={`payment-badge ${order.paymentStatus === "paid" ? "paid" : "pending"}`}>{order.paymentStatus || "pending"}</span></td>
+                          <td>{order.orderDate}</td>
+                          <td><button className="view-btn" onClick={() => { setSelectedOrder(order); setShowOrderModal(true); }}>View</button></td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -787,16 +758,20 @@ const AdminDashboard = () => {
             <div className="dashboard-section">
               <h3>Top Selling Products</h3>
               <div className="top-products-grid">
-                {topProducts.map(product => (
-                  <div key={product.id} className="top-product-card">
-                    <img src={product.image} alt={product.name} />
-                    <div className="top-product-info">
-                      <h4>{product.name}</h4>
-                      <p>Sold: {product.soldCount || 0} units</p>
-                      <p>Revenue: ₹{((product.priceValue || 0) * (product.soldCount || 0)).toLocaleString()}</p>
+                {topProducts.length === 0 ? (
+                  <p>No products yet</p>
+                ) : (
+                  topProducts.map(product => (
+                    <div key={product.id} className="top-product-card">
+                      <img src={product.image} alt={product.name} />
+                      <div className="top-product-info">
+                        <h4>{product.name}</h4>
+                        <p>Sold: {product.soldCount || 0} units</p>
+                        <p>Revenue: ₹{((product.priceValue || 0) * (product.soldCount || 0)).toLocaleString()}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 
@@ -828,40 +803,19 @@ const AdminDashboard = () => {
                   <div className="admin-field"><label>Category</label><select value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})}><option value="jaggery">Jaggery</option><option value="organic">Organic</option><option value="special">Special</option></select></div>
                   <div className="admin-field"><label>Image Path</label><input type="text" value={formData.image} onChange={(e) => setFormData({...formData, image: e.target.value})} placeholder="/assets/image.png" /></div>
                   
-                  {/* ─── VARIANTS SECTION ─── */}
+                  {/* VARIANTS SECTION */}
                   <div className="admin-field full-width">
                     <label>Product Variants (Weight/Size)</label>
                     {formData.variants && formData.variants.map((variant, index) => (
                       <div key={index} className="variant-row" style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
-                        <input
-                          type="text"
-                          placeholder="Label (e.g. 500g)"
-                          value={variant.label}
-                          onChange={(e) => handleVariantChange(index, 'label', e.target.value)}
-                          style={{ flex: 2, padding: '6px 10px', borderRadius: '4px', border: '1px solid #ddd' }}
-                        />
-                        <input
-                          type="number"
-                          placeholder="Price (₹)"
-                          value={variant.price}
-                          onChange={(e) => handleVariantChange(index, 'price', e.target.value)}
-                          style={{ flex: 1, padding: '6px 10px', borderRadius: '4px', border: '1px solid #ddd' }}
-                        />
-                        <input
-                          type="number"
-                          placeholder="Stock"
-                          value={variant.stock}
-                          onChange={(e) => handleVariantChange(index, 'stock', e.target.value)}
-                          style={{ flex: 1, padding: '6px 10px', borderRadius: '4px', border: '1px solid #ddd' }}
-                        />
+                        <input type="text" placeholder="Label (e.g. 500g)" value={variant.label} onChange={(e) => handleVariantChange(index, 'label', e.target.value)} style={{ flex: 2, padding: '6px 10px', borderRadius: '4px', border: '1px solid #ddd' }} />
+                        <input type="number" placeholder="Price (₹)" value={variant.price} onChange={(e) => handleVariantChange(index, 'price', e.target.value)} style={{ flex: 1, padding: '6px 10px', borderRadius: '4px', border: '1px solid #ddd' }} />
+                        <input type="number" placeholder="Stock" value={variant.stock} onChange={(e) => handleVariantChange(index, 'stock', e.target.value)} style={{ flex: 1, padding: '6px 10px', borderRadius: '4px', border: '1px solid #ddd' }} />
                         <button type="button" onClick={() => removeVariantRow(index)} style={{ background: 'transparent', border: 'none', color: 'red', cursor: 'pointer', fontSize: '18px' }}>✕</button>
                       </div>
                     ))}
-                    <button type="button" onClick={addVariantRow} className="add-variant-btn" style={{ marginTop: '8px', padding: '4px 12px', background: '#f1a40f', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
-                      + Add Variant
-                    </button>
+                    <button type="button" onClick={addVariantRow} className="add-variant-btn" style={{ marginTop: '8px', padding: '4px 12px', background: '#f1a40f', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>+ Add Variant</button>
                   </div>
-                  {/* ─── END VARIANTS ─── */}
                 </div>
                 <div className="admin-form-buttons">
                   <button onClick={editingProduct ? handleUpdateProduct : handleAddProduct} className="admin-save-btn">{editingProduct ? "Update" : "Save"}</button>
@@ -875,18 +829,22 @@ const AdminDashboard = () => {
                 <table className="admin-table">
                   <thead><tr><th>Image</th><th>Product</th><th>Price</th><th>Stock</th><th>Sold</th><th>Revenue</th><th>Variants</th><th>Actions</th></tr></thead>
                   <tbody>
-                    {products.map(product => (
-                      <tr key={product.id}>
-                        <td><img src={product.image} alt={product.name} className="admin-product-img" /></td>
-                        <td><strong>{product.name}</strong><br /><small>{product.description}</small></td>
-                        <td>{product.price}</td>
-                        <td><span className={product.stock > 0 ? "stock-badge in-stock" : "stock-badge out-of-stock"}>{product.stock} units</span></td>
-                        <td>{product.soldCount || 0}</td>
-                        <td>₹{((product.priceValue || 0) * (product.soldCount || 0)).toLocaleString()}</td>
-                        <td>{product.variants && product.variants.length > 0 ? product.variants.map(v => v.label).join(', ') : 'None'}</td>
-                        <td><button onClick={() => handleEditProduct(product)} className="admin-edit-btn">Edit</button><button onClick={() => handleDeleteProduct(product.id)} className="admin-delete-btn">Delete</button></td>
-                      </tr>
-                    ))}
+                    {products.length === 0 ? (
+                      <tr><td colSpan="8" className="no-data">No products yet</td></tr>
+                    ) : (
+                      products.map(product => (
+                        <tr key={product.id}>
+                          <td><img src={product.image} alt={product.name} className="admin-product-img" /></td>
+                          <td><strong>{product.name}</strong><br /><small>{product.description}</small></td>
+                          <td>{product.price}</td>
+                          <td><span className={product.stock > 0 ? "stock-badge in-stock" : "stock-badge out-of-stock"}>{product.stock} units</span></td>
+                          <td>{product.soldCount || 0}</td>
+                          <td>₹{((product.priceValue || 0) * (product.soldCount || 0)).toLocaleString()}</td>
+                          <td>{product.variants && product.variants.length > 0 ? product.variants.map(v => v.label).join(', ') : 'None'}</td>
+                          <td><button onClick={() => handleEditProduct(product)} className="admin-edit-btn">Edit</button><button onClick={() => handleDeleteProduct(product.id)} className="admin-delete-btn">Delete</button></td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -935,16 +893,20 @@ const AdminDashboard = () => {
               <table className="admin-table">
                 <thead><tr><th>Order ID</th><th>Customer</th><th>Amount</th><th>Payment Method</th><th>Payment Status</th><th>Action</th></tr></thead>
                 <tbody>
-                  {orders.filter(o => o.paymentStatus !== "paid").map(order => (
-                    <tr key={order.id}>
-                      <td>{order.id}</td>
-                      <td>{order.customer}</td>
-                      <td>₹{order.total}</td>
-                      <td>{order.paymentMethod}</td>
-                      <td><span className={`payment-badge ${order.paymentStatus === "paid" ? "paid" : "pending"}`}>{order.paymentStatus || "pending"}</span></td>
-                      <td><button className="mark-paid-btn" onClick={() => updatePaymentStatus(order.id, "paid")}>Mark as Paid</button><button className="refund-btn" onClick={() => updatePaymentStatus(order.id, "refunded")}>Refund</button></td>
-                    </tr>
-                  ))}
+                  {orders.filter(o => o.paymentStatus !== "paid").length === 0 ? (
+                    <tr><td colSpan="6" className="no-data">All payments are settled</td></tr>
+                  ) : (
+                    orders.filter(o => o.paymentStatus !== "paid").map(order => (
+                      <tr key={order.id}>
+                        <td>{order.id}</td>
+                        <td>{order.customer}</td>
+                        <td>₹{order.total}</td>
+                        <td>{order.paymentMethod}</td>
+                        <td><span className={`payment-badge ${order.paymentStatus === "paid" ? "paid" : "pending"}`}>{order.paymentStatus || "pending"}</span></td>
+                        <td><button className="mark-paid-btn" onClick={() => updatePaymentStatus(order.id, "paid")}>Mark as Paid</button><button className="refund-btn" onClick={() => updatePaymentStatus(order.id, "refunded")}>Refund</button></td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1113,39 +1075,19 @@ const AdminDashboard = () => {
                 <div className="admin-form-grid">
                   <div className="admin-field">
                     <label>Phone Number 1 *</label>
-                    <input
-                      type="text"
-                      value={contactFormData.phone1}
-                      onChange={(e) => setContactFormData({...contactFormData, phone1: e.target.value})}
-                      placeholder="+91 7060998050"
-                    />
+                    <input type="text" value={contactFormData.phone1} onChange={(e) => setContactFormData({...contactFormData, phone1: e.target.value})} placeholder="+91 7060998050" />
                   </div>
                   <div className="admin-field">
                     <label>Phone Number 2</label>
-                    <input
-                      type="text"
-                      value={contactFormData.phone2}
-                      onChange={(e) => setContactFormData({...contactFormData, phone2: e.target.value})}
-                      placeholder="+91 7906396629"
-                    />
+                    <input type="text" value={contactFormData.phone2} onChange={(e) => setContactFormData({...contactFormData, phone2: e.target.value})} placeholder="+91 7906396629" />
                   </div>
                   <div className="admin-field">
                     <label>Email Address *</label>
-                    <input
-                      type="email"
-                      value={contactFormData.email}
-                      onChange={(e) => setContactFormData({...contactFormData, email: e.target.value})}
-                      placeholder="contact@email.com"
-                    />
+                    <input type="email" value={contactFormData.email} onChange={(e) => setContactFormData({...contactFormData, email: e.target.value})} placeholder="contact@email.com" />
                   </div>
                   <div className="admin-field full-width">
                     <label>Address *</label>
-                    <textarea
-                      value={contactFormData.address}
-                      onChange={(e) => setContactFormData({...contactFormData, address: e.target.value})}
-                      rows="3"
-                      placeholder="Full address"
-                    />
+                    <textarea value={contactFormData.address} onChange={(e) => setContactFormData({...contactFormData, address: e.target.value})} rows="3" placeholder="Full address" />
                   </div>
                 </div>
                 <div className="admin-form-buttons">
@@ -1163,9 +1105,7 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {/* ✅ ANALYTICS CONTENT */}
         {activeTab === "analytics" && <AdminAnalytics />}
-
       </div>
 
       {showOrderModal && selectedOrder && (

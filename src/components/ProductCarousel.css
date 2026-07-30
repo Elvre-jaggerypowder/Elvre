@@ -1,276 +1,330 @@
 /* ============================================
-   ELVRE - Product Carousel (Premium Green + Brown)
+   ELVRE — Product Carousel (Home Page)
+   Same tokens as ProductsPage.css so the two feel like one product
    ============================================ */
 
-/* ---- Section Background ---- */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500&family=Work+Sans:wght@400;500;600;700&display=swap');
+
+.product-carousel-section,
+.product-carousel-section *,
+.product-carousel-section *::before,
+.product-carousel-section *::after {
+  box-sizing: border-box;
+}
+
 .product-carousel-section {
-  padding: 80px 20px;
-  background: linear-gradient(180deg, #FAF8F5 0%, #F5EDE0 100%);
-  /* Light Brown to Cream gradient */
+  --forest: #1F3B2C;
+  --forest-deep: #142A1F;
+  --sage: #7C9A79;
+  --sage-light: #E7EEE3;
+  --brown: #8B5E3C;
+  --brown-dark: #6d4a2e;
+  --gold: #C68A3D;
+  --cream: #FBF6EC;
+  --paper: #F3ECDD;
+  --ink: #241F17;
+  --ink-soft: #6b6153;
+
+  padding: 80px 20px 70px;
+  background: linear-gradient(180deg, var(--cream) 0%, var(--paper) 100%);
+  font-family: 'Work Sans', sans-serif;
+
+  /* Self-contained entrance animation — replaces data-aos.
+     This runs every time the section mounts/re-mounts (e.g. when async
+     product data arrives and swaps the loading/empty JSX for the real
+     content) and always ends at opacity:1, so it can never get stuck
+     invisible the way the AOS-driven version did. */
+  animation: carouselSectionIn 0.6s ease both;
+}
+
+@keyframes carouselSectionIn {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ---- Header ---- */
 .product-carousel-header {
   text-align: center;
-  margin-bottom: 50px;
+  margin-bottom: 44px;
 }
 
 .product-carousel-title {
-  font-family: 'Livvicsemibold', sans-serif;
-  font-size: 2.6rem;
-  color: #2E5A2E;
-  /* Dark Green */
+  font-family: 'Fraunces', serif;
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--forest-deep);
   margin-bottom: 8px;
-  letter-spacing: -0.5px;
-}
-
-.product-carousel-title span {
-  color: #6D4C2A;
-  /* Brown highlight */
+  letter-spacing: -0.01em;
 }
 
 .product-carousel-subtitle {
-  font-family: 'centurygothic', sans-serif;
-  font-size: 1.1rem;
-  color: #7A6B5A;
-  /* Muted Brown */
-  letter-spacing: 1px;
-  font-weight: 300;
-}
-
-/* ---- Swiper Container ---- */
-.product-swiper {
-  max-width: 1240px;
-  margin: 0 auto;
-  padding: 20px 40px;
+  font-family: 'Work Sans', sans-serif;
+  font-size: 1rem;
+  color: var(--brown);
+  font-weight: 500;
+  letter-spacing: 0.2px;
 }
 
 /* ============================================
-   PRODUCT CARD - Premium Look
+   SIMPLE CENTERED GRID (1–3 products)
+   This guarantees true centering — no Swiper quirks.
+   ============================================ */
+.product-simple-grid {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 28px;
+}
+
+.product-simple-grid .product-card {
+  width: 300px;
+}
+
+.product-simple-grid.single .product-card {
+  width: 320px;
+}
+
+/* ---- Swiper Container (4+ products) ---- */
+.product-swiper {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 20px 44px 46px;
+}
+
+.product-swiper .swiper-wrapper {
+  align-items: stretch;
+}
+
+.product-swiper .swiper-pagination-bullet-active {
+  background: var(--gold);
+}
+
+.product-swiper .swiper-button-next,
+.product-swiper .swiper-button-prev {
+  color: var(--forest);
+}
+
+/* ============================================
+   PRODUCT CARD
    ============================================ */
 .product-card {
   background: #FFFFFF;
-  border-radius: 24px;
-  padding: 25px 20px 30px;
+  border-radius: 20px;
+  padding: 26px 20px 28px;
   text-align: center;
-  box-shadow: 0 8px 30px rgba(46, 90, 46, 0.06);
-  border: 1px solid rgba(109, 76, 42, 0.08);
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 6px 24px rgba(31, 59, 44, 0.06);
+  border: 1px solid #ece2cd;
+  transition: all 0.3s ease;
   position: relative;
-  /* Badge ke liye */
   overflow: hidden;
+  cursor: pointer;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-/* ---- Hover Effect (Premium Lift) ---- */
 .product-card:hover {
-  transform: translateY(-12px);
-  box-shadow: 0 25px 50px rgba(46, 90, 46, 0.12);
-  border-color: #E8F5E9;
-  /* Light Green border on hover */
+  transform: translateY(-8px);
+  box-shadow: 0 20px 42px rgba(31, 59, 44, 0.13);
+  border-color: var(--gold);
 }
 
-/* ---- Organic Badge (Top-Left corner) ---- */
-.product-card::before {
-  content: "🌿 100% Natural";
+/* ---- Tags (top-left stack) ---- */
+.carousel-tag {
   position: absolute;
-  top: 14px;
   left: 14px;
-  background: #E8F5E9;
-  /* Light Green */
-  color: #2E5A2E;
-  /* Dark Green text */
-  font-family: 'centurygothic', sans-serif;
-  font-size: 0.65rem;
+  font-size: 10.5px;
   font-weight: 700;
-  padding: 4px 14px;
+  padding: 4px 12px;
   border-radius: 50px;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 8px rgba(46, 90, 46, 0.1);
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.carousel-tag-organic {
+  top: 14px;
+  background: var(--sage-light);
+  color: var(--forest-deep);
+}
+
+.carousel-tag-badge {
+  top: 42px;
+  background: var(--gold);
+  color: var(--forest-deep);
+  text-transform: uppercase;
+}
+.carousel-tag-badge.bestseller { background: var(--gold); color: var(--forest-deep); }
+.carousel-tag-badge.popular    { background: var(--forest); color: var(--cream); }
+.carousel-tag-badge.limited    { background: #b5482d; color: white; }
+.carousel-tag-badge.new        { background: var(--brown); color: white; }
+
+/* If there's no dynamic badge, the organic tag alone sits at top */
+.product-card:not(:has(.carousel-tag-badge)) .carousel-tag-organic {
+  top: 14px;
 }
 
 /* ---- Product Image ---- */
 .product-image {
   width: 100%;
-  max-width: 180px;
+  max-width: 170px;
   height: auto;
-  margin: 10px auto 20px;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.04));
+  margin: 14px auto 18px;
+  filter: drop-shadow(0 8px 14px rgba(31, 59, 44, 0.1));
+  pointer-events: none;
 }
 
 /* ---- Product Name ---- */
 .product-name {
-  font-family: 'Livvicsemibold', sans-serif;
-  font-size: 1.3rem;
-  color: #2D2D2D;
+  font-family: 'Fraunces', serif;
+  font-size: 1.2rem;
+  color: var(--ink);
   margin-bottom: 6px;
   font-weight: 600;
+  pointer-events: none;
 }
 
 /* ---- Description ---- */
 .product-description {
-  font-family: 'centurygothic', sans-serif;
-  font-size: 0.9rem;
-  color: #7A6B5A;
-  /* Brownish-grey */
+  font-size: 0.87rem;
+  color: var(--ink-soft);
   margin-bottom: 10px;
   line-height: 1.5;
+  pointer-events: none;
 }
 
 /* ---- Price ---- */
 .product-price {
-  font-family: 'Livvicsemibold', sans-serif;
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: #6D4C2A;
-  /* Primary Brown */
+  color: var(--forest-deep);
   margin-bottom: 12px;
-}
-.product-price small {
-  font-size: 0.9rem;
-  color: #A0927B;
-  font-weight: 400;
-  margin-left: 4px;
+  pointer-events: none;
 }
 
 /* ---- Stock Status ---- */
 .product-stock {
   margin-bottom: 18px;
   font-size: 0.85rem;
+  pointer-events: none;
 }
 .in-stock {
-  color: #2E5A2E;
-  /* Green */
-  font-family: 'centurygothic', sans-serif;
+  color: #2e7d4f;
   font-weight: 600;
-}
-.in-stock::before {
-  content: "● ";
-  font-size: 0.6rem;
-  vertical-align: middle;
 }
 .out-of-stock {
-  color: #B85C4A;
-  /* Muted Red-Brown */
-  font-family: 'centurygothic', sans-serif;
+  color: #b5482d;
+  font-weight: 600;
 }
 
 /* ============================================
-   BUTTONS - Brown & Green Theme
+   BUTTONS
    ============================================ */
+.product-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: auto;
+  position: relative;
+  z-index: 2;
+}
 
-/* ---- Base Button Style ---- */
 .product-btn {
   border: none;
-  padding: 12px 24px;
+  padding: 11px 22px;
   border-radius: 50px;
-  /* Pill shape */
-  font-family: 'Livvic', sans-serif;
-  font-weight: 600;
-  font-size: 0.85rem;
+  font-weight: 700;
+  font-size: 0.82rem;
   cursor: pointer;
-  transition: all 0.3s ease;
-  margin: 4px 6px;
-  letter-spacing: 0.3px;
+  transition: all 0.25s ease;
+  letter-spacing: 0.2px;
 }
 
-/* ---- Add to Cart (Brown) ---- */
 .add-to-cart-btn {
-  background-color: #6D4C2A;
-  /* Primary Brown */
-  color: #FFFFFF;
-  box-shadow: 0 4px 15px rgba(109, 76, 42, 0.2);
+  background-color: var(--gold);
+  color: var(--forest-deep);
+  box-shadow: 0 4px 14px rgba(198, 138, 61, 0.25);
 }
 .add-to-cart-btn:hover {
-  background-color: #4D341D;
-  /* Darker Brown */
+  background-color: var(--forest);
+  color: var(--cream);
   transform: scale(1.05);
-  box-shadow: 0 8px 25px rgba(109, 76, 42, 0.3);
 }
 
-/* ---- Buy Now (Green) ---- */
 .buy-now-btn-small {
-  background-color: #2E5A2E;
-  /* Primary Green */
-  color: #FFFFFF;
-  box-shadow: 0 4px 15px rgba(46, 90, 46, 0.2);
+  background-color: var(--forest);
+  color: var(--cream);
+  box-shadow: 0 4px 14px rgba(31, 59, 44, 0.25);
 }
 .buy-now-btn-small:hover {
-  background-color: #1E3E1E;
-  /* Darker Green */
+  background-color: var(--forest-deep);
   transform: scale(1.05);
-  box-shadow: 0 8px 25px rgba(46, 90, 46, 0.3);
 }
 
-/* ---- Wishlist/Icon Button (Outline) ---- */
-.product-btn-outline {
+/* ---- View All Products (links carousel → full products page) ---- */
+.view-all-products-btn {
+  display: block;
+  margin: 44px auto 0;
+  padding: 13px 32px;
   background: transparent;
-  border: 1.5px solid #D4C9BC;
-  color: #6D4C2A;
-  padding: 10px 14px;
-  border-radius: 50%;
-  /* Circular */
-  font-size: 1.1rem;
-  transition: 0.3s;
+  border: 2px solid var(--forest);
+  color: var(--forest-deep);
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  letter-spacing: 0.2px;
 }
-.product-btn-outline:hover {
-  border-color: #6D4C2A;
-  background: #F5EDE0;
+
+.view-all-products-btn:hover {
+  background: var(--forest);
+  color: var(--cream);
   transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(31, 59, 44, 0.2);
+}
+
+/* ---- Cart toast (scoped name to avoid clashing with other pages) ---- */
+.carousel-cart-toast {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: #1F3B2C;
+  color: #FBF6EC;
+  padding: 12px 24px;
+  border-radius: 30px;
+  z-index: 10000;
+  animation: carouselSlideIn 0.3s ease;
+  box-shadow: 0 8px 22px rgba(0,0,0,0.25);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+@keyframes carouselSlideIn {
+  from { transform: translateX(120%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
 
 /* ============================================
-   RESPONSIVE (Mobile)
+   RESPONSIVE
    ============================================ */
 @media (max-width: 768px) {
-  .product-carousel-section {
-    padding: 50px 15px;
-  }
-
-  .product-carousel-title {
-    font-size: 2rem;
-  }
-  .product-carousel-title span {
-    display: block;
-    /* Mobile pe span ko nayi line pe lao */
-  }
-
-  .product-swiper {
-    padding: 10px 10px;
-  }
-
-  .product-card {
-    padding: 18px 12px 22px;
-    border-radius: 18px;
-  }
-  
-  /* Badge chhota karo mobile pe */
-  .product-card::before {
-    font-size: 0.55rem;
-    top: 10px;
-    left: 10px;
-    padding: 3px 10px;
-  }
-
-  .product-image {
-    max-width: 130px;
-  }
-
-  .product-name {
-    font-size: 1.1rem;
-  }
-  .product-price {
-    font-size: 1.3rem;
-  }
-
-  .product-btn {
-    padding: 10px 18px;
-    font-size: 0.75rem;
-  }
+  .product-carousel-section { padding: 50px 15px; }
+  .product-carousel-title { font-size: 1.9rem; }
+  .product-swiper { padding: 10px 10px 40px; }
+  .product-card { padding: 20px 14px 22px; border-radius: 16px; }
+  .product-image { max-width: 130px; }
+  .product-name { font-size: 1.05rem; }
+  .product-price { font-size: 1.3rem; }
+  .product-btn { padding: 9px 18px; font-size: 0.76rem; }
+  .product-simple-grid .product-card,
+  .product-simple-grid.single .product-card { width: 100%; max-width: 320px; }
 }
 
 @media (max-width: 480px) {
-  .product-card::before {
-    content: "🌿 Natural";
-    /* Chhoti screen pe short text */
-  }
+  .product-buttons { flex-direction: column; align-items: center; }
+  .product-btn { width: 100%; max-width: 200px; }
+  .carousel-tag { font-size: 9px; padding: 3px 10px; }
 }

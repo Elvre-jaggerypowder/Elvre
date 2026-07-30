@@ -5,16 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="%PUBLIC_URL%/Whitesubmark1.png" />
     <link
-  rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
     <link rel="stylesheet" href="%PUBLIC_URL%/fonts/fonts.css" />
     <meta name="theme-color" content="#000000" />
-    <meta name="description" content="Web site created using create-react-app"/>
+    <meta name="description" content="Web site created using create-react-app" />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <title>ELVRE-Jaggery powder</title>
   </head>
   <body>
+    <!-- ⭐ ADD THIS SCRIPT ⭐ -->
+    <script>
+      (function() {
+        var params = new URLSearchParams(window.location.search);
+        var path = params.get('path');
+        if (path) {
+          var cleanUrl = decodeURIComponent(path);
+          history.replaceState(null, '', cleanUrl);
+        }
+      })();
+    </script>
+
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
   </body>

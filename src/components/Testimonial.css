@@ -51,7 +51,7 @@
 }
 
 .testimonial-tagline {
-  color: #8d5a33;
+  color: #8B5E3C;
   letter-spacing: 2px;
   font-size: 0.85rem;
   font-weight: 600;
@@ -60,7 +60,7 @@
 }
 
 .testimonial-heading {
-  color: #16311f;
+  color: #1F3B2C;
   font-size: 2.2rem;
   font-weight: 700;
   margin: 0 0 6px;
@@ -74,17 +74,89 @@
   margin-bottom: 25px;
 }
 
+/* ============================================
+   SWIPE AREA (new) — wraps the arrows + card
+   ============================================ */
+.testimonial-swipe-area {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* helps touch gestures feel native instead of scrolling the page */
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.testimonial-nav-arrow {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(139, 94, 60, 0.3);
+  background: #FBF6EC;
+  color: #8B5E3C;
+  font-size: 20px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 3;
+}
+
+.testimonial-nav-arrow:hover {
+  background: #8B5E3C;
+  color: #FBF6EC;
+  border-color: #8B5E3C;
+  transform: scale(1.08);
+}
+
+.testimonial-nav-arrow:active {
+  transform: scale(0.94);
+}
+
 /* ─── TESTIMONIAL CARD ─── */
 .testimonial-card {
   background: #f9f6f0;
   border-radius: 16px;
   padding: 25px 22px;
-  margin-bottom: 20px;
+  margin-bottom: 6px;
+  flex: 1;
+  min-width: 0; /* allows flex child to shrink properly on small screens */
+  overflow: hidden;
+}
+
+/* Slide-in animation driven by the direction of navigation.
+   Falls back gracefully — even without JS support for the class,
+   the card still renders correctly, it just won't animate. */
+.testimonial-card-inner {
+  animation-duration: 0.35s;
+  animation-timing-function: ease;
+  animation-fill-mode: both;
+}
+
+.testimonial-card-inner.slide-next {
+  animation-name: slideInFromRight;
+}
+
+.testimonial-card-inner.slide-prev {
+  animation-name: slideInFromLeft;
+}
+
+@keyframes slideInFromRight {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInFromLeft {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
 .quote-icon {
   font-size: 2.2rem;
-  color: #8d5a33;
+  color: #8B5E3C;
   opacity: 0.3;
   line-height: 1;
   margin-bottom: 6px;
@@ -108,13 +180,14 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #8d5a33;
+  background: #8B5E3C;
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
   font-size: 1.1rem;
+  flex-shrink: 0;
 }
 
 .testimonial-user h4 {
@@ -125,9 +198,19 @@
 }
 
 .stars {
-  color: #f1a40f;
+  color: #C68A3D;
   font-size: 0.9rem;
   letter-spacing: 2px;
+}
+
+/* ─── SWIPE HINT (new, mobile-only) ─── */
+.swipe-hint {
+  display: none;
+  text-align: center;
+  font-size: 0.72rem;
+  color: #a89b85;
+  letter-spacing: 0.5px;
+  margin: 0 0 14px;
 }
 
 /* ─── CONTROLS ─── */
@@ -154,7 +237,7 @@
 }
 
 .dot.active {
-  background: #8d5a33;
+  background: #8B5E3C;
   width: 28px;
   border-radius: 5px;
 }
@@ -167,7 +250,7 @@
 
 /* ─── CTA BUTTON ─── */
 .testimonial-cta-btn {
-  background: #8d5a33;
+  background: #8B5E3C;
   color: white;
   border: none;
   padding: 14px 30px;
@@ -177,7 +260,7 @@
   cursor: pointer;
   transition: all 0.3s;
   width: 100%;
-  box-shadow: 0 4px 15px rgba(141, 90, 51, 0.25);
+  box-shadow: 0 4px 15px rgba(139, 94, 60, 0.25);
 }
 
 .testimonial-cta-btn:hover {
@@ -191,6 +274,16 @@
   letter-spacing: 2px;
   text-align: center;
   margin-top: 12px;
+}
+
+/* ─── LOADING STATE ─── */
+.testimonial-loading {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8B5E3C;
+  font-size: 1rem;
 }
 
 /* ─── RESPONSIVE ─── */
@@ -217,5 +310,134 @@
   }
   .testimonial-message {
     font-size: 1rem;
+  }
+  /* Swipe hint + slightly smaller arrows once we're clearly on touch-sized screens */
+  .swipe-hint {
+    display: block;
+  }
+  .testimonial-nav-arrow {
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .testimonial-hero {
+    padding: 40px 14px;
+    min-height: auto;
+  }
+  .testimonial-overlay {
+    padding: 0 10px;
+  }
+  .testimonial-card-wrapper {
+    padding: 22px 16px;
+    border-radius: 18px;
+  }
+  .testimonial-heading {
+    font-size: 1.5rem;
+  }
+  .testimonial-subheading {
+    font-size: 0.8rem;
+    margin-bottom: 18px;
+  }
+  .testimonial-card {
+    padding: 18px 14px;
+  }
+  .testimonial-message {
+    font-size: 0.95rem;
+  }
+  .user-avatar {
+    width: 38px;
+    height: 38px;
+    font-size: 1rem;
+  }
+  /* Arrows tuck in tighter and card gets a touch more room */
+  .testimonial-swipe-area {
+    gap: 4px;
+  }
+  .testimonial-nav-arrow {
+    width: 26px;
+    height: 26px;
+    font-size: 16px;
+  }
+  .testimonial-cta-btn {
+    padding: 12px 24px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .testimonial-heading {
+    font-size: 1.3rem;
+  }
+  /* On very narrow phones the arrows are hidden — swipe still works fine,
+     the hint text below tells the user how to navigate. */
+  .testimonial-nav-arrow {
+    display: none;
+  }
+}
+/* ─── SWIPE CONTAINER ─── */
+.testimonial-swipe-container {
+  touch-action: pan-y; /* allows vertical scroll, prevents horizontal scroll interference */
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.testimonial-swipe-container:active {
+  cursor: grabbing;
+}
+
+/* ─── ARROW BUTTONS ─── */
+.slider-arrows {
+  display: flex;
+  justify-content: space-between;
+  margin: 8px 0 16px;
+  gap: 12px;
+}
+
+.arrow-btn {
+  background: #8d5a33;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.25s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(141, 90, 51, 0.2);
+}
+
+.arrow-btn:hover {
+  background: #6d4a2e;
+  transform: scale(1.05);
+}
+
+.arrow-btn:active {
+  transform: scale(0.95);
+}
+
+.arrow-prev {
+  margin-right: auto;
+}
+
+.arrow-next {
+  margin-left: auto;
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 480px) {
+  .arrow-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+  .slider-arrows {
+    margin: 4px 0 12px;
   }
 }

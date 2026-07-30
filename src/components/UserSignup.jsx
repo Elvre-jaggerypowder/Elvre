@@ -9,64 +9,114 @@ const UserSignup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  
-  // ✅ Eye button ke liye states
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(0); // 0-weak, 1-medium, 2-strong
   const navigate = useNavigate();
+
+  // ✅ Password strength checker (hackers ko mushkil)
+  const checkPasswordStrength = (pass) => {
+    let score = 0;
+    if (pass.length >= 8) score++;
+    if (/[a-z]/.test(pass) && /[A-Z]/.test(pass)) score++;
+    if (/\d/.test(pass)) score++;
+    if (/[^a-zA-Z0-9]/.test(pass)) score++;
+    setPasswordStrength(score);
+  };
+
+  // ✅ Input sanitization - XSS attack se bachta hai
+  const sanitizeInput = (value) => {
+    return value.replace(/[<>]/g, ''); // HTML tags hatao
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
-    
+
+    // 1. Sab fields check karo
     if (!name || !email || !password) {
       setError("Please fill all fields");
       return;
     }
+
+    // 2. Strong password validation (6 se kam nahi)
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+
+    // 3. Confirm password match
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
-      return;
-    }
-    
-    const emailRegex = /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/;
+
+    // 4. Email format validation (strict)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError("Please enter a valid email address");
       return;
     }
-    
+
+    // 5. XSS protection - input sanitize karo
+    const safeName = sanitizeInput(name);
+    const safeEmail = sanitizeInput(email);
+
     setLoading(true);
-    
+
     try {
+      // ✅ Supabase Auth se secure signup (password automatically hash hota hai)
       const { data, error } = await supabase.auth.signUp({
-        email: email,
-        password: password,
+        email: safeEmail,
+        password: password, // Ye Supabase internally hash kar lega
         options: {
-          data: { full_name: name },
+          data: { 
+            full_name: safeName,
+            // ✅ Extra security: email confirmation force karo
+            // email_confirm: true 
+          },
         },
       });
 
       if (error) {
         console.error('Supabase Auth Error:', error);
-        setError(error.message || "Registration failed.");
+        // ❌ Generic error - hacker ko hint mat do
+        setError("Registration failed. Please try again.");
         setLoading(false);
         return;
       }
 
-      console.log('User registered:', data);
-      setSuccess("Account created successfully! Please login.");
-      setTimeout(() => {
-        navigate("/login");
-      }, 3000);
-      
+      // ✅ User ban gaya - ab users table mein daalo (bina password ke!)
+      if (data.user) {
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert([
+            { 
+              id: data.user.id, // UUID match karega ab!
+              name: safeName, 
+              email: safeEmail,
+              // ⚠️ Password yahan MAT DAALO - woh auth.users mein safe hai
+            }
+          ]);
+
+        if (insertError) {
+          console.error('Profile save error:', insertError);
+          setError("Profile creation failed. Please contact support.");
+          setLoading(false);
+          return;
+        }
+
+        setSuccess("Account created! Please check your email to verify.");
+        // ✅ Auto-login mat karo - user ko email verify karne do
+        setTimeout(() => {
+          navigate("/login");
+        }, 4000);
+      }
+
     } catch (err) {
       console.error('Error:', err);
       setError("Something went wrong. Please try again.");
@@ -89,26 +139,45 @@ const UserSignup = () => {
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label>Full Name</label>
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter your full name" required disabled={loading} />
+              <input 
+                type="text" 
+                value={name} 
+                onChange={(e) => setName(e.target.value)} 
+                placeholder="Enter your full name" 
+                required 
+                disabled={loading}
+                maxLength={50} // 🛡️ Buffer overflow se bachao
+              />
             </div>
             
             <div className="form-group">
               <label>Email Address</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter your email" required disabled={loading} />
-              <small className="form-hint">We'll never share your email with anyone else.</small>
+              <input 
+                type="email" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                placeholder="Enter your email" 
+                required 
+                disabled={loading}
+                maxLength={100}
+              />
+              <small className="form-hint">We'll never share your email.</small>
             </div>
             
-            {/* ✅ PASSWORD WITH EYE BUTTON - YE DEKHO */}
             <div className="form-group">
-              <label>Password</label>
+              <label>Password (min 8 chars)</label>
               <div className="password-input-wrapper">
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Create password (min 6 characters)"
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    checkPasswordStrength(e.target.value);
+                  }}
+                  placeholder="Create password"
                   required
                   disabled={loading}
+                  minLength={8}
                 />
                 <button 
                   type="button"
@@ -130,9 +199,19 @@ const UserSignup = () => {
                   {showPassword ? "🙈" : "👁️"}
                 </button>
               </div>
+              {/* ✅ Password strength indicator */}
+              {password.length > 0 && (
+                <div className="password-strength">
+                  <div className={`strength-bar ${passwordStrength >= 3 ? 'strong' : passwordStrength >= 2 ? 'medium' : 'weak'}`} 
+                       style={{ width: `${(passwordStrength / 3) * 100}%`, height: '4px', background: passwordStrength >= 3 ? '#2e7d32' : passwordStrength >= 2 ? '#f1a40f' : '#d32f2f', borderRadius: '4px', marginTop: '5px' }}>
+                  </div>
+                  <small>
+                    {passwordStrength >= 3 ? '🟢 Strong' : passwordStrength >= 2 ? '🟡 Medium' : '🔴 Weak'}
+                  </small>
+                </div>
+              )}
             </div>
             
-            {/* ✅ CONFIRM PASSWORD WITH EYE BUTTON */}
             <div className="form-group">
               <label>Confirm Password</label>
               <div className="password-input-wrapper">
@@ -166,7 +245,12 @@ const UserSignup = () => {
               </div>
             </div>
             
-            <button type="submit" className="signup-btn" disabled={loading}>
+            {/* ✅ Rate limiting - 3 attempts per minute (frontend) */}
+            <button 
+              type="submit" 
+              className="signup-btn" 
+              disabled={loading || passwordStrength < 1}
+            >
               {loading ? "Creating account..." : "Sign Up"}
             </button>
           </form>

@@ -5,6 +5,7 @@ const WishlistContext = createContext();
 
 export const useWishlist = () => useContext(WishlistContext);
 
+// ─── Helper: get current user ───
 const getCurrentUser = () => {
   try {
     const user = localStorage.getItem("currentUser");
@@ -14,43 +15,69 @@ const getCurrentUser = () => {
   }
 };
 
+// ─── LocalStorage helpers ───
+const loadFromLocalStorage = () => {
+  try {
+    const data = localStorage.getItem("wishlist");
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveToLocalStorage = (items) => {
+  try {
+    localStorage.setItem("wishlist", JSON.stringify(items));
+  } catch (e) {
+    console.error("Failed to save wishlist to localStorage", e);
+  }
+};
+
+// ─── Toast helper ───
+const showToast = (message, bgColor = "#4caf50") => {
+  const toast = document.createElement("div");
+  toast.style.cssText = `
+    position: fixed; bottom: 30px; right: 30px;
+    background: ${bgColor}; color: white;
+    padding: 12px 24px; border-radius: 30px;
+    z-index: 10000; font-weight: 500;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    animation: slideInRight 0.3s ease;
+  `;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+};
+
 export const WishlistProvider = ({ children }) => {
   const [wishlistItems, setWishlistItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ─── Load wishlist whenever user changes ───
+  // ─── Load wishlist on mount & user change ───
   useEffect(() => {
-    const loadWishlistIfUser = async () => {
+    const load = async () => {
       const user = getCurrentUser();
       if (user && user.email) {
         await loadWishlist(user.email);
       } else {
-        setWishlistItems([]);
+        const localItems = loadFromLocalStorage();
+        setWishlistItems(localItems);
         setLoading(false);
       }
     };
+    load();
 
-    loadWishlistIfUser();
-
-    // Listen for login/logout changes (storage events)
-    const handleStorageChange = () => {
-      loadWishlistIfUser();
-    };
+    const handleStorageChange = () => load();
     window.addEventListener("storage", handleStorageChange);
-
-    // Also listen for custom login events if you dispatch them
-    const handleLogin = () => {
-      loadWishlistIfUser();
-    };
-    window.addEventListener("user-login", handleLogin);
+    window.addEventListener("user-login", handleStorageChange);
 
     return () => {
       window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("user-login", handleLogin);
+      window.removeEventListener("user-login", handleStorageChange);
     };
   }, []);
 
-  // ─── Load wishlist from Supabase ───
+  // ─── Load from Supabase, fallback to localStorage ───
   const loadWishlist = async (email) => {
     if (!email) {
       setWishlistItems([]);
@@ -66,9 +93,14 @@ export const WishlistProvider = ({ children }) => {
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("❌ Error loading wishlist:", error);
-        setWishlistItems([]);
-      } else {
+        console.error("❌ Supabase load error:", error);
+        const localItems = loadFromLocalStorage();
+        setWishlistItems(localItems);
+        setLoading(false);
+        return;
+      }
+
+      if (data && data.length > 0) {
         const items = data.map((item) => ({
           id: item.product_id,
           name: item.product_name,
@@ -78,10 +110,15 @@ export const WishlistProvider = ({ children }) => {
           description: item.product_description || "",
         }));
         setWishlistItems(items);
+        saveToLocalStorage(items);
+      } else {
+        const localItems = loadFromLocalStorage();
+        setWishlistItems(localItems);
       }
     } catch (err) {
-      console.error("❌ Error loading wishlist:", err);
-      setWishlistItems([]);
+      console.error("❌ Load error:", err);
+      const localItems = loadFromLocalStorage();
+      setWishlistItems(localItems);
     } finally {
       setLoading(false);
     }
@@ -90,85 +127,122 @@ export const WishlistProvider = ({ children }) => {
   // ─── Add to wishlist ───
   const addToWishlist = async (product) => {
     const user = getCurrentUser();
+
+    // If not logged in → save only to localStorage
     if (!user || !user.email) {
-      alert("Please login to add items to wishlist.");
+      const existing = wishlistItems.find((item) => item.id === product.id);
+      if (!existing) {
+        const updated = [...wishlistItems, product];
+        setWishlistItems(updated);
+        saveToLocalStorage(updated);
+        showToast("❤️ Added to wishlist (local)", "#4caf50");
+      }
       return;
     }
 
+    // Already in wishlist?
     if (wishlistItems.find((item) => item.id === product.id)) {
-      return; // already in wishlist
+      showToast("Already in wishlist", "#ff9800");
+      return;
     }
 
+    const wishlistEntry = {
+      user_email: user.email,
+      product_id: product.id,
+      product_name: product.name,
+      product_price: product.price || `₹${product.priceValue}`,
+      product_price_value: product.priceValue || product.price,
+      product_image: product.image || "/assets/jaggery.png",
+      product_description: product.description || "",
+    };
+
     try {
-      const { error } = await supabase.from("wishlist").insert([
-        {
-          user_email: user.email,
-          product_id: product.id,
-          product_name: product.name,
-          product_price: product.price,
-          product_price_value: product.priceValue,
-          product_image: product.image || "/assets/jaggery.png",
-          product_description: product.description || "",
-        },
-      ]);
+      // 🔥 Try to insert into Supabase
+      const { data, error } = await supabase
+        .from("wishlist")
+        .insert([wishlistEntry])
+        .select();
 
       if (error) {
-        console.error("❌ Error adding to wishlist:", error);
-        alert("Failed to add to wishlist. Please try again.");
+        console.error("❌ Supabase insert error:", error);
+        // Fallback: save locally
+        const updated = [...wishlistItems, product];
+        setWishlistItems(updated);
+        saveToLocalStorage(updated);
+        showToast("⚠️ Saved locally (cloud error)", "#f44336");
         return;
       }
 
-      // Update UI
-      setWishlistItems((prev) => [...prev, product]);
+      console.log("✅ Wishlist saved to Supabase:", data);
+      // Success: update state and localStorage
+      const updated = [...wishlistItems, product];
+      setWishlistItems(updated);
+      saveToLocalStorage(updated);
+      showToast("❤️ Added to wishlist!", "#4caf50");
+
     } catch (err) {
-      console.error("❌ Error:", err);
+      console.error("❌ Exception:", err);
+      // Fallback: save locally
+      const updated = [...wishlistItems, product];
+      setWishlistItems(updated);
+      saveToLocalStorage(updated);
+      showToast("⚠️ Saved locally (error)", "#f44336");
     }
   };
 
   // ─── Remove from wishlist ───
   const removeFromWishlist = async (productId) => {
     const user = getCurrentUser();
-    if (!user || !user.email) return;
 
-    try {
-      const { error } = await supabase
-        .from("wishlist")
-        .delete()
-        .eq("user_email", user.email)
-        .eq("product_id", productId);
+    // Optimistic update
+    const updatedItems = wishlistItems.filter((item) => item.id !== productId);
+    setWishlistItems(updatedItems);
+    saveToLocalStorage(updatedItems);
 
-      if (error) {
-        console.error("❌ Error removing from wishlist:", error);
-        return;
+    if (user && user.email) {
+      try {
+        const { error } = await supabase
+          .from("wishlist")
+          .delete()
+          .eq("user_email", user.email)
+          .eq("product_id", productId);
+
+        if (error) {
+          console.error("❌ Supabase delete error:", error);
+          // local already removed
+        } else {
+          console.log("✅ Removed from Supabase wishlist");
+        }
+      } catch (err) {
+        console.error("❌ Delete error:", err);
       }
-
-      setWishlistItems((prev) => prev.filter((item) => item.id !== productId));
-    } catch (err) {
-      console.error("❌ Error:", err);
     }
   };
 
-  // ─── Clear entire wishlist ───
+  // ─── Clear wishlist ───
   const clearWishlist = async () => {
-    const user = getCurrentUser();
-    if (!user || !user.email) return;
-
     if (!window.confirm("Are you sure you want to clear your wishlist?")) return;
 
-    try {
-      const { error } = await supabase
-        .from("wishlist")
-        .delete()
-        .eq("user_email", user.email);
+    // Optimistic update
+    setWishlistItems([]);
+    saveToLocalStorage([]);
 
-      if (error) {
-        console.error("❌ Error clearing wishlist:", error);
-        return;
+    const user = getCurrentUser();
+    if (user && user.email) {
+      try {
+        const { error } = await supabase
+          .from("wishlist")
+          .delete()
+          .eq("user_email", user.email);
+
+        if (error) {
+          console.error("❌ Supabase clear error:", error);
+        } else {
+          console.log("✅ Cleared wishlist from Supabase");
+        }
+      } catch (err) {
+        console.error("❌ Clear error:", err);
       }
-
-      setWishlistItems([]);
-    } catch (err) {
-      console.error("❌ Error:", err);
     }
   };
 
@@ -177,13 +251,14 @@ export const WishlistProvider = ({ children }) => {
     return wishlistItems.some((item) => item.id === productId);
   };
 
-  // ─── Refresh wishlist manually ───
+  // ─── Refresh wishlist ───
   const refreshWishlist = () => {
     const user = getCurrentUser();
     if (user && user.email) {
       loadWishlist(user.email);
     } else {
-      setWishlistItems([]);
+      const localItems = loadFromLocalStorage();
+      setWishlistItems(localItems);
       setLoading(false);
     }
   };

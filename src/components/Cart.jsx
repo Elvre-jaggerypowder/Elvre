@@ -1,24 +1,66 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import WhatsApp from "./WhatsApp";
-import { useCart } from "../hooks/useCart"; // ⬅️ Hook import karo
 import "./Cart.css";
 
 const Cart = () => {
   const navigate = useNavigate();
-  // Hook se saare functions aur data le lo
-  const {
-    cartItems,
-    loading,
-    updateQuantity,
-    removeFromCart,
-    clearCart, // 🔥 Clear cart function yahan se aaya
-    subtotal,
-    shipping,
-    total,
-    getTotalItems
-  } = useCart();
+  const [cartItems, setCartItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadCart();
+    window.addEventListener("storage", loadCart);
+    return () => window.removeEventListener("storage", loadCart);
+  }, []);
+
+  const loadCart = () => {
+    const savedCart = JSON.parse(localStorage.getItem("cart") || "[]");
+    console.log("Cart loaded:", savedCart);
+    setCartItems(savedCart);
+    setLoading(false);
+  };
+
+  const updateQuantity = (id, newQuantity) => {
+    if (newQuantity < 1) return;
+    const updatedCart = cartItems.map(item =>
+      item.id === id ? { ...item, quantity: newQuantity } : item
+    );
+    setCartItems(updatedCart);
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+    window.dispatchEvent(new Event("storage"));
+  };
+
+  const removeFromCart = (id) => {
+    const updatedCart = cartItems.filter(item => item.id !== id);
+    setCartItems(updatedCart);
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+    window.dispatchEvent(new Event("storage"));
+  };
+
+  const clearCart = () => {
+    if (window.confirm("Clear your cart?")) {
+      setCartItems([]);
+      localStorage.removeItem("cart");
+      window.dispatchEvent(new Event("storage"));
+    }
+  };
+
+  const getSubtotal = () => {
+    return cartItems.reduce((sum, item) => {
+      const price = item.priceValue || parseFloat(item.price?.replace('₹', '')) || 0;
+      return sum + (price * (item.quantity || 1));
+    }, 0);
+  };
+
+  const getTotalItems = () => {
+    return cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
+  };
+
+  const subtotal = getSubtotal();
+  const shipping = subtotal > 499 ? 0 : 40;
+  const total = subtotal + shipping;
 
   const handleCheckout = () => {
     if (cartItems.length === 0) {
@@ -34,7 +76,6 @@ const Cart = () => {
     }
   };
 
-  // Loading state
   if (loading) {
     return (
       <>
@@ -45,7 +86,6 @@ const Cart = () => {
     );
   }
 
-  // Empty state
   if (cartItems.length === 0) {
     return (
       <>
@@ -64,7 +104,6 @@ const Cart = () => {
     );
   }
 
-  // Full Cart Page UI
   return (
     <>
       <Navbar />
@@ -77,6 +116,8 @@ const Cart = () => {
               {cartItems.map((item) => {
                 const itemPrice = item.priceValue || parseFloat(item.price?.replace('₹', '')) || 0;
                 const itemTotal = itemPrice * (item.quantity || 1);
+
+                // ✅ Display variant label if present
                 const displayName = item.variant ? `${item.name} (${item.variant})` : item.name;
 
                 return (
@@ -113,6 +154,7 @@ const Cart = () => {
               </div>
               {subtotal < 499 && subtotal > 0 && (
                 <div className="free-shipping-note">
+                  {/* ✅ FIX: .00 hata diya - ab ₹249 dikhega */}
                   ✨ Add ₹{Math.ceil(499 - subtotal)} more for free shipping!
                 </div>
               )}
@@ -121,7 +163,7 @@ const Cart = () => {
                 <span>₹{total}</span>
               </div>
               <div className="cart-actions">
-                {/* ✅ Sanyam ka Clear Cart button - ab hook se call ho raha hai */}
+                {/* ✅ Clear Cart button - YE RAHEGA (maine remove nahi kiya) */}
                 <button onClick={clearCart} className="clear-cart-btn">
                   Clear Cart
                 </button>

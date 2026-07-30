@@ -6,12 +6,12 @@ const BenefitSection = () => {
     {
       icon: "🛡️",
       title: "Immunity & Detox",
-      description: "Natural antioxidants help boost immunity and detoxify body. Rich in essential minerals for overall wellness."
+      description: "Natural antioxidants help boost immunity and detoxify the body. Rich in essential minerals for overall wellness."
     },
     {
       icon: "🌿",
-      title: "Hormonal Respiratory",
-      description: "Balances hormones and supports respiratory health. Helps maintain hormonal equilibrium naturally."
+      title: "Hormonal & Respiratory Health",
+      description: "Supports hormonal balance and respiratory wellness naturally, as part of a traditional, mineral-rich diet."
     },
     {
       icon: "⚡",
@@ -24,8 +24,9 @@ const BenefitSection = () => {
     <section className="benefit-section">
       <div className="benefit-container">
         <div className="benefit-header">
+          <span className="benefit-tag">✦ WHY ELVRE ✦</span>
           <h2>Why Choose <span>ELVRE</span></h2>
-          <p>NATURE'S BEST FOR YOUR WELLNESS</p>
+          <p>Nature's best for your wellness</p>
         </div>
 
         <div className="benefit-grid">

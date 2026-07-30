@@ -453,3 +453,47 @@
     transition: none !important;
   }
 }
+/* ============================================
+   PASSWORD EYE BUTTON - Login ke liye add karo
+   ============================================ */
+.password-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-input-wrapper input {
+  padding-right: 48px !important; /* Eye button ke liye space */
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #8a7a65; /* Inke color ke hisaab se */
+  font-size: 1.2rem;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.password-toggle-btn:hover:not(:disabled) {
+  color: var(--bark-600, #82502c);
+}
+
+.password-toggle-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Mobile par thoda adjust karo */
+@media (max-width: 760px) {
+  .password-input-wrapper input {
+    padding-right: 40px !important;
+  }
+}

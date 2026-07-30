@@ -25,6 +25,11 @@
   padding-top: 80px;
 }
 
+/* extra breathing room so the sticky bar never overlaps the footer/content */
+.product-detail-page.has-sticky-bar {
+  padding-bottom: 90px;
+}
+
 .product-detail-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -168,6 +173,46 @@
   font-weight: 500;
 }
 
+/* ===== VARIANT SELECTOR ===== */
+.variant-selector {
+  margin-bottom: 20px;
+}
+
+.variant-selector label {
+  display: block;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.variant-options {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.variant-btn {
+  padding: 10px 18px;
+  border: 2px solid #e3d5c5;
+  background: #fbf7f2;
+  color: #8B5E3C;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.variant-btn:hover {
+  border-color: #8B5E3C;
+}
+
+.variant-btn.active {
+  background: #8B5E3C;
+  border-color: #8B5E3C;
+  color: white;
+}
+
 .certifications {
   display: flex;
   gap: 12px;
@@ -272,7 +317,7 @@
 .buy-now-btn {
   flex: 1;
   padding: 14px;
-  background: #8B5E3C;
+  background: #4caf50;
   color: white;
   border: none;
   border-radius: 12px;
@@ -283,7 +328,7 @@
 }
 
 .buy-now-btn:hover {
-  background: #6d4a2e;
+  background: #3d8b40;
 }
 
 /* Delivery Info */
@@ -551,22 +596,30 @@
   cursor: pointer;
   transition: all 0.3s;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border: 1px solid #f0ede8;
 }
 
 .related-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  border-color: #e3d5c5;
 }
 
 .related-card img {
   width: 100%;
   max-width: 120px;
+  height: 100px;
+  object-fit: contain;
   margin-bottom: 10px;
+  background: #f9f3e8;
+  border-radius: 10px;
+  padding: 8px;
 }
 
 .related-card h4 {
   font-size: 14px;
   margin-bottom: 5px;
+  color: #333;
 }
 
 .related-card p {
@@ -579,6 +632,130 @@
   padding: 100px;
   font-size: 18px;
   color: #666;
+}
+
+/* ===================================================
+   STICKY "ADD TO CART" BAR
+   (these classes existed in the JSX but had no CSS —
+   that's why it was rendering unstyled in the bottom-left)
+=================================================== */
+.sticky-add-to-cart {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  background: #ffffff;
+  border-top: 2px solid #e8f5e9;
+  box-shadow: 0 -6px 24px rgba(0,0,0,0.08);
+  z-index: 999;
+  padding: 12px 0;
+}
+
+.sticky-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.sticky-product-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.sticky-product-image {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  background: #f9f3e8;
+  border-radius: 10px;
+  padding: 6px;
+  flex-shrink: 0;
+}
+
+.sticky-product-text {
+  min-width: 0;
+}
+
+.sticky-product-text h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}
+
+.sticky-price {
+  color: #8B5E3C;
+  font-weight: bold;
+  font-size: 16px;
+  margin: 0;
+}
+
+.sticky-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.sticky-quantity {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f5f7fa;
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.sticky-quantity button {
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  color: #8B5E3C;
+  transition: all 0.2s;
+}
+
+.sticky-quantity button:hover {
+  background: #8B5E3C;
+  color: white;
+}
+
+.sticky-quantity span {
+  min-width: 26px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.sticky-add-btn {
+  padding: 12px 26px;
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.25s;
+}
+
+.sticky-add-btn:hover {
+  background: #3d8b40;
 }
 
 /* Responsive */
@@ -609,6 +786,10 @@
   .product-detail-page {
     padding-top: 70px;
   }
+
+  .product-detail-page.has-sticky-bar {
+    padding-bottom: 80px;
+  }
   
   .product-info-section h1 {
     font-size: 22px;
@@ -633,5 +814,29 @@
   
   .related-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .sticky-product-text h4 {
+    max-width: 140px;
+    font-size: 12px;
+  }
+
+  .sticky-price {
+    font-size: 14px;
+  }
+
+  .sticky-actions {
+    gap: 8px;
+  }
+
+  .sticky-add-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sticky-product-text h4 {
+    max-width: 90px;
   }
 }

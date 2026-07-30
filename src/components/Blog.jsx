@@ -47,7 +47,6 @@ const Blog = () => {
           </p>
         </div>
       </section>
-      <Footer />
       <WhatsApp />
       <BackToTop />
     </>

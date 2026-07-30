@@ -61,7 +61,6 @@ const BuyNow = () => {
       <>
         <Navbar />
         <div className="buynow-loading">Loading...</div>
-        <Footer />
       </>
     );
   }
@@ -74,7 +73,6 @@ const BuyNow = () => {
           <h2>Product not found</h2>
           <button onClick={() => navigate("/products")}>Browse Products</button>
         </div>
-        <Footer />
       </>
     );
   }
@@ -124,7 +122,6 @@ const BuyNow = () => {
           </div>
         </div>
       </div>
-      <Footer />
     </>
   );
 };

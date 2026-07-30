@@ -163,117 +163,66 @@
 }
 
 /* ============================================
-   ✅ FIX: BUTTONS VERTICAL (1 ke neeche 1)
-   ============================================ */
-/* ============================================
-   ✅ FIX: DONO BUTTONS BILKUL SAME SIZE (FORCEFUL)
-   ============================================ */
-/* ============================================
-   ✅ FINAL FIX: DONO BUTTONS EXACT SAME
+   ✅ FIX 1: DONO BUTTONS VERTICAL (1 ke neeche 1)
    ============================================ */
 .cart-actions {
   display: flex;
-  flex-direction: column;
-  gap: 14px;
+  flex-direction: column; /* ⬅️ Vertical kar diya */
+  gap: 12px;
   margin: 20px 0 15px;
-  width: 100%;
 }
 
-/* 🔥 Sabse pehle saari default styling hatao, phir apni do */
-.clear-cart-btn,
-.checkout-btn {
-  all: unset !important; /* Ye saare browser defaults hata dega */
-  
-  /* Ab apni styling do */
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 100% !important;
-  height: 54px !important;
-  min-height: 54px !important;
-  max-height: 54px !important;
-  padding: 0 20px !important;
-  border-radius: 30px !important;
-  font-weight: 700 !important;
-  font-size: 1rem !important;
-  font-family: inherit !important;
-  box-sizing: border-box !important;
-  cursor: pointer !important;
-  text-align: center !important;
-  flex-shrink: 0 !important;
-  line-height: 1 !important;
-  letter-spacing: 0.5px;
-  transition: all 0.3s ease;
-}
-
-/* Clear Cart (Outline) */
+/* ✅ FIX 2: Clear Cart - Brown Outline (Red nahi) */
 .clear-cart-btn {
-  background: transparent !important;
-  border: 2px solid #8B5E3C !important;
-  color: #8B5E3C !important;
+  width: 100%;
+  padding: 14px;
+  background: transparent;
+  color: #8B5E3C;
+  border: 2px solid #8B5E3C;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  height: 52px; /* Fix height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.5px;
 }
 
 .clear-cart-btn:hover {
-  background: #8B5E3C !important;
-  color: white !important;
+  background: #8B5E3C;
+  color: white;
   box-shadow: 0 4px 15px rgba(139, 94, 60, 0.3);
 }
 
-/* Checkout (Solid) */
+/* ✅ Checkout button - Solid Brown */
 .checkout-btn {
-  background: #8B5E3C !important;
-  border: none !important;
-  color: white !important;
-  box-shadow: 0 4px 15px rgba(139, 94, 60, 0.2);
-}
-
-.checkout-btn:hover {
-  background: #6d4a2e !important;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(139, 94, 60, 0.35);
-}
-
-/* Mobile mein thoda chhota */
-@media (max-width: 768px) {
-  .clear-cart-btn,
-  .checkout-btn {
-    height: 48px !important;
-    min-height: 48px !important;
-    max-height: 48px !important;
-    font-size: 0.9rem !important;
-  }
-}
-
-/* ----- Checkout Button (Solid) ----- */
-.checkout-btn {
-  width: 100% !important;
-  height: 54px !important;        /* Clear cart ke bilkul barabar */
-  min-height: 54px !important;
-  max-height: 54px !important;
-  padding: 0 20px !important;
-  background: #8B5E3C !important;
-  color: white !important;
-  border: none !important;
-  border-radius: 30px !important;
+  width: 100%;
+  padding: 14px;
+  background: #8B5E3C;
+  color: white;
+  border: none;
+  border-radius: 30px;
   cursor: pointer;
-  font-weight: 700 !important;
-  font-size: 1rem !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  box-sizing: border-box !important;
+  font-weight: 700;
+  font-size: 1rem;
   transition: all 0.3s ease;
+  height: 52px; /* Clear cart ke bilkul barabar */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   letter-spacing: 0.5px;
-  line-height: 1 !important;
-  white-space: nowrap !important;
   box-shadow: 0 4px 15px rgba(139, 94, 60, 0.2);
 }
 
 .checkout-btn:hover {
-  background: #6d4a2e !important;
+  background: #6d4a2e;
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(139, 94, 60, 0.35);
 }
+
 .continue-shopping-link {
   display: block;
   text-align: center;
@@ -359,19 +308,9 @@
     padding: 30px 20px;
   }
 
-  /* Mobile mein bhi vertical hi rahega, bas height thodi chhoti */
   .clear-cart-btn,
   .checkout-btn {
     height: 48px;
     font-size: 0.95rem;
-  }
-}
-@media (max-width: 768px) {
-  .clear-cart-btn,
-  .checkout-btn {
-    height: 50px !important;  /* Mobile mein thoda chhota, lekin dono barabar */
-    min-height: 50px !important;
-    max-height: 50px !important;
-    font-size: 0.95rem !important;
   }
 }

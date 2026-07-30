@@ -1,6 +1,21 @@
+/* ============================================
+   MODERN AGRICULTURE SECTION — unified brand tokens
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500&family=Work+Sans:wght@400;500;600;700&display=swap');
+
 .modern-agriculture-section {
-  background: linear-gradient(135deg, #fffdf8 0%, #f5f0e8 100%);
+  --forest: #1F3B2C;
+  --forest-deep: #142A1F;
+  --brown: #8B5E3C;
+  --gold: #C68A3D;
+  --cream: #FBF6EC;
+  --paper: #F3ECDD;
+  --ink-soft: #6b6153;
+
+  background: var(--paper);
   overflow: hidden;
+  font-family: 'Work Sans', sans-serif;
 }
 
 /* FULL SIZE IMAGE AT TOP - like hero section */
@@ -35,22 +50,24 @@
 }
 
 .agri-tag {
-  font-family: 'Livvic', sans-serif;
   font-size: 0.85rem;
   letter-spacing: 3px;
-  color: #f1a40f;
+  color: var(--gold);
   text-transform: uppercase;
+  font-weight: 600;
   display: inline-block;
   margin-bottom: 15px;
 }
 
 .agri-heading {
-  font-family: 'Livvicsemibold', sans-serif;
+  font-family: 'Fraunces', serif;
   font-size: 2.3rem;
-  color: #263C28;
+  color: var(--forest-deep);
+  font-weight: 700;
   margin-bottom: 40px;
   line-height: 1.3;
   text-align: center;
+  letter-spacing: -0.01em;
 }
 
 .agri-highlights {
@@ -68,12 +85,14 @@
   background: white;
   border-radius: 20px;
   transition: all 0.3s ease;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  box-shadow: 0 5px 15px rgba(31, 59, 44, 0.06);
+  border: 1px solid #ece2cd;
 }
 
 .highlight-item:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  border-color: var(--gold);
+  box-shadow: 0 10px 25px rgba(31, 59, 44, 0.1);
 }
 
 .highlight-icon {
@@ -81,126 +100,63 @@
 }
 
 .highlight-item h4 {
-  font-family: 'Livvicsemibold', sans-serif;
+  font-family: 'Fraunces', serif;
   font-size: 1.1rem;
-  color: #263C28;
+  color: var(--forest-deep);
+  font-weight: 600;
   margin-bottom: 8px;
 }
 
 .highlight-item p {
-  font-family: 'Quicksand', sans-serif;
   font-size: 0.9rem;
-  color: #666;
+  color: var(--ink-soft);
   line-height: 1.5;
 }
 
 .agri-description {
-  font-family: 'Quicksand', sans-serif;
   font-size: 1rem;
   line-height: 1.9;
-  color: #444;
+  color: var(--ink-soft);
   text-align: justify;
   background: white;
   padding: 35px;
   border-radius: 20px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  box-shadow: 0 5px 15px rgba(31, 59, 44, 0.06);
+  border: 1px solid #ece2cd;
 }
 
 /* ===== RESPONSIVE - ALL DEVICES ===== */
 
-/* Mobile Phones */
 @media (max-width: 768px) {
-  .agri-image-full {
-    height: 40vh;
-    min-height: 250px;
-  }
-  
-  .agri-content-wrapper {
-    padding: 40px 4%;
-  }
-  
-  .agri-heading {
-    font-size: 1.6rem;
-    margin-bottom: 25px;
-  }
-  
-  .agri-highlights {
-    grid-template-columns: 1fr;
-    gap: 15px;
-  }
-  
-  .highlight-item {
-    padding: 15px;
-  }
-  
-  .highlight-icon {
-    font-size: 1.6rem;
-  }
-  
-  .highlight-item h4 {
-    font-size: 0.95rem;
-  }
-  
-  .agri-description {
-    padding: 20px;
-    font-size: 0.85rem;
-    line-height: 1.7;
-  }
+  .agri-image-full { height: 40vh; min-height: 250px; }
+  .agri-content-wrapper { padding: 40px 4%; }
+  .agri-heading { font-size: 1.6rem; margin-bottom: 25px; }
+  .agri-highlights { grid-template-columns: 1fr; gap: 15px; }
+  .highlight-item { padding: 15px; }
+  .highlight-icon { font-size: 1.6rem; }
+  .highlight-item h4 { font-size: 0.95rem; }
+  .agri-description { padding: 20px; font-size: 0.85rem; line-height: 1.7; }
 }
 
-/* Tablets */
 @media (min-width: 769px) and (max-width: 1024px) {
-  .agri-image-full {
-    height: 50vh;
-    min-height: 350px;
-  }
-  
-  .agri-content-wrapper {
-    padding: 50px 5%;
-  }
-  
-  .agri-heading {
-    font-size: 2rem;
-  }
-  
-  .agri-highlights {
-    gap: 20px;
-  }
-  
-  .highlight-item {
-    padding: 15px;
-  }
+  .agri-image-full { height: 50vh; min-height: 350px; }
+  .agri-content-wrapper { padding: 50px 5%; }
+  .agri-heading { font-size: 2rem; }
+  .agri-highlights { gap: 20px; }
+  .highlight-item { padding: 15px; }
 }
 
-/* Desktop */
 @media (min-width: 1025px) and (max-width: 1440px) {
-  .agri-image-full {
-    height: 55vh;
-  }
-  
-  .agri-heading {
-    font-size: 2.1rem;
-  }
+  .agri-image-full { height: 55vh; }
+  .agri-heading { font-size: 2.1rem; }
 }
 
-/* Large Desktop */
 @media (min-width: 1441px) {
-  .agri-image-full {
-    height: 65vh;
-  }
-  
-  .agri-heading {
-    font-size: 2.5rem;
-  }
-  
-  .agri-description {
-    font-size: 1.05rem;
-  }
+  .agri-image-full { height: 65vh; }
+  .agri-heading { font-size: 2.5rem; }
+  .agri-description { font-size: 1.05rem; }
 }
 
-/* iOS Specific */
 @supports (-webkit-touch-callout: none) {
-  .agri-grass-full {
-    transform: translateZ(0);
-  }
+  .agri-grass-full { transform: translateZ(0); }
 }

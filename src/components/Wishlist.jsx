@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWishlist } from "../context/WishlistContext";
 import Navbar from "./Navbar";
@@ -6,11 +6,32 @@ import { FaHeart, FaTrash, FaShoppingCart, FaRegHeart } from "react-icons/fa";
 import "./Wishlist.css";
 
 const Wishlist = () => {
-  const { wishlistItems, removeFromWishlist, clearWishlist } = useWishlist();
+  const { wishlistItems, removeFromWishlist, clearWishlist, addToWishlist } = useWishlist();
   const navigate = useNavigate();
+  const [localWishlist, setLocalWishlist] = useState([]);
+
+  // ─── FALLBACK: Agar context fail ho to localStorage use karo ───
+  useEffect(() => {
+    if (!wishlistItems || wishlistItems.length === 0) {
+      const saved = localStorage.getItem("wishlist");
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          setLocalWishlist(parsed);
+        } catch (e) {
+          setLocalWishlist([]);
+        }
+      }
+    } else {
+      setLocalWishlist(wishlistItems);
+    }
+  }, [wishlistItems]);
+
+  // Display items from context, fallback to local
+  const displayItems = wishlistItems && wishlistItems.length > 0 ? wishlistItems : localWishlist;
 
   const moveToCart = (product, e) => {
-    e.stopPropagation(); // Prevent navigation when clicking button
+    e.stopPropagation();
     const cart = JSON.parse(localStorage.getItem("cart") || "[]");
     const existing = cart.find((item) => item.id === product.id);
     if (existing) {
@@ -20,20 +41,33 @@ const Wishlist = () => {
     }
     localStorage.setItem("cart", JSON.stringify(cart));
     window.dispatchEvent(new Event("storage"));
-    
-    const toast = document.createElement("div");
-    toast.className = "wishlist-toast";
-    toast.innerHTML = `✓ ${product.name} added to cart!`;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2000);
+    showToast(`✓ ${product.name} added to cart!`, "#4caf50");
   };
 
   const toggleWishlist = (product, e) => {
     e.stopPropagation();
-    removeFromWishlist(product.id);
+    try {
+      removeFromWishlist(product.id);
+      // Also remove from localStorage fallback
+      const saved = JSON.parse(localStorage.getItem("wishlist") || "[]");
+      const updated = saved.filter(item => item.id !== product.id);
+      localStorage.setItem("wishlist", JSON.stringify(updated));
+      showToast(`✕ ${product.name} removed from wishlist`, "#e74c3c");
+    } catch (err) {
+      // If context fails, update localStorage directly
+      const saved = JSON.parse(localStorage.getItem("wishlist") || "[]");
+      const updated = saved.filter(item => item.id !== product.id);
+      localStorage.setItem("wishlist", JSON.stringify(updated));
+      setLocalWishlist(updated);
+      showToast(`✕ ${product.name} removed from wishlist (local)`, "#e74c3c");
+    }
+  };
+
+  const showToast = (message, bgColor) => {
     const toast = document.createElement("div");
-    toast.className = "wishlist-toast-remove";
-    toast.innerHTML = `✕ ${product.name} removed from wishlist`;
+    toast.className = "wishlist-toast";
+    toast.style.background = bgColor;
+    toast.innerHTML = message;
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 2000);
   };
@@ -42,7 +76,8 @@ const Wishlist = () => {
     navigate(`/product/${productId}`);
   };
 
-  if (wishlistItems.length === 0) {
+  // ─── EMPTY STATE ───
+  if (displayItems.length === 0) {
     return (
       <>
         <Navbar />
@@ -70,7 +105,7 @@ const Wishlist = () => {
           <div className="wishlist-header">
             <div>
               <h1>My Wishlist</h1>
-              <p className="wishlist-count">{wishlistItems.length} items saved</p>
+              <p className="wishlist-count">{displayItems.length} items saved</p>
             </div>
             <button className="clear-wishlist-btn" onClick={clearWishlist}>
               <FaTrash /> Clear All
@@ -78,7 +113,7 @@ const Wishlist = () => {
           </div>
 
           <div className="wishlist-grid">
-            {wishlistItems.map((product) => (
+            {displayItems.map((product) => (
               <div 
                 key={product.id} 
                 className="wishlist-card"
@@ -116,25 +151,13 @@ const Wishlist = () => {
           position: fixed;
           bottom: 30px;
           right: 30px;
-          background: #4caf50;
           color: white;
           padding: 12px 24px;
           border-radius: 30px;
           z-index: 10000;
           animation: slideInRight 0.3s ease;
           box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        .wishlist-toast-remove {
-          position: fixed;
-          bottom: 30px;
-          right: 30px;
-          background: #f44336;
-          color: white;
-          padding: 12px 24px;
-          border-radius: 30px;
-          z-index: 10000;
-          animation: slideInRight 0.3s ease;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+          font-weight: 500;
         }
         @keyframes slideInRight {
           from { transform: translateX(100%); opacity: 0; }

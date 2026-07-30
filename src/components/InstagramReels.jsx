@@ -1,46 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo } from "react";
 import "./InstagramReels.css";
 
-const InstagramReels = () => {
+const InstagramReels = memo(() => {
   const [loaded, setLoaded] = useState(false);
 
-  // Your 5 Instagram Reel URLs
   const reels = [
-    {
-      id: 1,
-      url: "https://www.instagram.com/reel/DYFXSW7Sd4S/",
-      embedUrl: "https://www.instagram.com/reel/DYFXSW7Sd4S/embed",
-      caption: "Foodie meets fitness - Balanced eating with ELVRE Jaggery",
-      badge: "🌿 Lifestyle"
-    },
-    {
-      id: 2,
-      url: "https://www.instagram.com/reel/DU3G8CJkkct/",
-      embedUrl: "https://www.instagram.com/reel/DU3G8CJkkct/embed",
-      caption: "Slow mornings with chemical-free sweetness",
-      badge: "☀️ Morning"
-    },
-    {
-      id: 3,
-      url: "https://www.instagram.com/reel/DXyBYRhxeuP/",
-      embedUrl: "https://www.instagram.com/reel/DXyBYRhxeuP/embed",
-      caption: "Must try this product! Customer love",
-      badge: "❤️ Testimonial"
-    },
-    {
-      id: 4,
-      url: "https://www.instagram.com/reel/DUkL-JiEVPp/",
-      embedUrl: "https://www.instagram.com/reel/DUkL-JiEVPp/embed",
-      caption: "Handcrafted jaggery - Rich in iron, magnesium & potassium",
-      badge: "✨ Benefits"
-    },
-    {
-      id: 5,
-      url: "https://www.instagram.com/reel/DUkL-JiEVPp/",
-      embedUrl: "https://www.instagram.com/reel/DUkL-JiEVPp/embed",
-      caption: "Switch to sweetness that actually gives back",
-      badge: "🛒 Shop"
-    }
+    { id: 1, url: "https://www.instagram.com/reel/DYFXSW7Sd4S/", embedUrl: "https://www.instagram.com/reel/DYFXSW7Sd4S/embed", caption: "Foodie meets fitness - Balanced eating with ELVRE Jaggery", badge: "🌿 Lifestyle" },
+    { id: 2, url: "https://www.instagram.com/reel/DU3G8CJkkct/", embedUrl: "https://www.instagram.com/reel/DU3G8CJkkct/embed", caption: "Slow mornings with chemical-free sweetness", badge: "☀️ Morning" },
+    { id: 3, url: "https://www.instagram.com/reel/DXyBYRhxeuP/", embedUrl: "https://www.instagram.com/reel/DXyBYRhxeuP/embed", caption: "Must try this product! Customer love", badge: "❤️ Testimonial" },
+    { id: 4, url: "https://www.instagram.com/reel/DUkL-JiEVPp/", embedUrl: "https://www.instagram.com/reel/DUkL-JiEVPp/embed", caption: "Handcrafted jaggery - Rich in iron, magnesium & potassium", badge: "✨ Benefits" },
+    { id: 5, url: "https://www.instagram.com/reel/DUkL-JiEVPp/", embedUrl: "https://www.instagram.com/reel/DUkL-JiEVPp/embed", caption: "Switch to sweetness that actually gives back", badge: "🛒 Shop" }
   ];
 
   useEffect(() => {
@@ -108,6 +77,6 @@ const InstagramReels = () => {
       </div>
     </section>
   );
-};
+});
 
 export default InstagramReels;

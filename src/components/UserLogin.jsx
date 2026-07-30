@@ -1,12 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Navbar from "./Navbar";
 import { supabase } from "../supabaseClient";
-// ✅ Eye icons import
 import { FaEye, FaEyeSlash } from 'react-icons/fa'; 
 import "./UserLogin.css";
 
-// ─── SocialRow (unchanged) ──────────────────────────
+// ─── SocialRow ──────────────────────────────────────
 const SocialRow = ({ socialLoading, onSocial }) => (
   <>
     <div className="auth-divider">
@@ -65,7 +64,6 @@ const UserLogin = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [phone, setPhone] = useState("");
 
-  // ✅ Password Show/Hide states - YE NAHI BHULE!
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [showSignupConfirm, setShowSignupConfirm] = useState(false);
@@ -73,28 +71,88 @@ const UserLogin = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState({ google: false, facebook: false });
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [isBlocked, setIsBlocked] = useState(false);
+  
+  // ⭐⭐⭐ FORGOT PASSWORD KE LIYE NAYA STATE ⭐⭐⭐
+  const [resetMessage, setResetMessage] = useState("");
 
   const navigate = useNavigate();
 
-  const ADMIN_EMAIL = "elvreofficals@gmail.com";
-  const ADMIN_PASSWORD = "Elvre@2024";
+  const ADMIN_EMAIL = process.env.REACT_APP_ADMIN_EMAIL || "elvreofficals@gmail.com";
+  const ADMIN_PASSWORD = process.env.REACT_APP_ADMIN_PASSWORD || "Elvre@2024";
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localStorage.getItem("currentUser")) {
+        localStorage.removeItem("currentUser");
+        alert("Session expired. Please login again.");
+        navigate("/login");
+      }
+    }, 30 * 60 * 1000);
+    return () => clearTimeout(timer);
+  }, [navigate]);
 
   const switchMode = (next) => {
     setError("");
+    setResetMessage(""); // Reset message clear karo
     setMode(next);
     setAnimKey((k) => k + 1);
+    setLoginAttempts(0);
+    setIsBlocked(false);
+  };
+
+  // ── ⭐⭐⭐ FORGOT PASSWORD FUNCTION ⭐⭐⭐ ──
+  const handleForgotPassword = async () => {
+    setError("");
+    setResetMessage("");
+
+    if (!email) {
+      setError("Please enter your email address first.");
+      return;
+    }
+
+    // Email format check
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/login', // Reset ke baad login page pe wapas aayega
+      });
+
+      if (error) {
+        setError(error.message || "Failed to send reset email.");
+        setLoading(false);
+        return;
+      }
+
+      setResetMessage(`✅ Password reset link sent to ${email}. Please check your email (and spam folder).`);
+      setLoading(false);
+    } catch (err) {
+      setError("Something went wrong. Please try again.");
+      setLoading(false);
+    }
   };
 
   // ── LOGIN ──────────────────────────────────────────
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
+    setResetMessage("");
+
+    if (isBlocked) {
+      setError("Too many failed attempts. Please wait 5 minutes.");
+      return;
+    }
 
     const trimmedEmail = email.trim();
     const trimmedPassword = password.trim();
 
-    // Admin check
     if (trimmedEmail === ADMIN_EMAIL && trimmedPassword === ADMIN_PASSWORD) {
       localStorage.setItem("adminLoggedIn", "true");
       localStorage.removeItem("currentUser");
@@ -103,15 +161,23 @@ const UserLogin = () => {
       return;
     }
 
+    setLoading(true);
     try {
-      // ✅ Supabase Auth se login
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email: trimmedEmail,
         password: trimmedPassword,
       });
 
       if (authError) {
-        setError("Invalid email or password.");
+        setError("Invalid credentials. Please try again.");
+        setLoginAttempts(prev => prev + 1);
+        if (loginAttempts + 1 >= 5) {
+          setIsBlocked(true);
+          setTimeout(() => {
+            setIsBlocked(false);
+            setLoginAttempts(0);
+          }, 5 * 60 * 1000);
+        }
         setLoading(false);
         return;
       }
@@ -129,8 +195,11 @@ const UserLogin = () => {
           email: data.user.email,
           phone: userData?.phone || "",
         };
+        
         localStorage.setItem("currentUser", JSON.stringify(userInfo));
         localStorage.removeItem("adminLoggedIn");
+        localStorage.setItem("sessionExpiry", Date.now() + 30 * 60 * 1000);
+        
         setLoading(false);
         const redirectTo = localStorage.getItem("redirectAfterLogin") || "/";
         localStorage.removeItem("redirectAfterLogin");
@@ -139,7 +208,7 @@ const UserLogin = () => {
       }
       setError("Something went wrong.");
     } catch (err) {
-      setError("Something went wrong.");
+      setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -155,12 +224,18 @@ const UserLogin = () => {
     const trimmedPassword = password.trim();
     const trimmedPhone = phone.trim();
 
+    if (trimmedPassword.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
     if (trimmedPassword !== confirmPassword.trim()) {
       setError("Passwords do not match.");
       return;
     }
-    if (trimmedPassword.length < 6) {
-      setError("Password must be at least 6 characters.");
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      setError("Please enter a valid email address.");
       return;
     }
 
@@ -181,17 +256,22 @@ const UserLogin = () => {
       }
 
       if (data?.user) {
-        // Database mein daalo (bina password ke)
-        await supabase.from("users").insert([
-          { id: data.user.id, name: trimmedName, email: trimmedEmail, phone: trimmedPhone },
-        ]);
-        
-        localStorage.setItem(
-          "currentUser",
-          JSON.stringify({ id: data.user.id, name: trimmedName, email: trimmedEmail, phone: trimmedPhone })
-        );
+        const { error: insertError } = await supabase
+          .from("users")
+          .insert([
+            { id: data.user.id, name: trimmedName, email: trimmedEmail, phone: trimmedPhone }
+          ]);
+
+        if (insertError) {
+          console.error('Profile save error:', insertError);
+          setError("Profile creation failed.");
+          setLoading(false);
+          return;
+        }
+
         setLoading(false);
-        navigate("/");
+        alert("Account created! Please check your email to verify.");
+        navigate("/login");
         return;
       }
       setError("Signup failed.");
@@ -222,7 +302,6 @@ const UserLogin = () => {
     <>
       <Navbar />
       <div className="auth-page">
-        {/* decorative leaves */}
         <svg className="leaf-particle" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C7 2 3 6 3 11c0 6 9 11 9 11s9-5 9-11c0-5-4-9-9-9z"/></svg>
         <svg className="leaf-particle" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C7 2 3 6 3 11c0 6 9 11 9 11s9-5 9-11c0-5-4-9-9-9z"/></svg>
         <svg className="leaf-particle" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C7 2 3 6 3 11c0 6 9 11 9 11s9-5 9-11c0-5-4-9-9-9z"/></svg>
@@ -237,14 +316,23 @@ const UserLogin = () => {
             <p className="auth-sub">Login to your account</p>
 
             {mode === "login" && error && <div className="auth-error">{error}</div>}
+            {/* ⭐ FORGOT PASSWORD SUCCESS MESSAGE SHOW KARO */}
+            {resetMessage && <div className="auth-success" style={{background: '#e8f5e9', color: '#2e7d32', padding: '10px', borderRadius: '8px', marginBottom: '15px'}}>{resetMessage}</div>}
 
             <form onSubmit={handleLogin}>
               <div className="auth-field">
                 <label>Email Address</label>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter your email" required disabled={loading} />
+                <input 
+                  type="email" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)} 
+                  placeholder="Enter your email" 
+                  required 
+                  disabled={loading || isBlocked}
+                  maxLength={100}
+                />
               </div>
               
-              {/* ✅ LOGIN PASSWORD FIELD WITH EYE BUTTON - YE DEKHO! */}
               <div className="auth-field">
                 <label>Password</label>
                 <div className="password-input-wrapper">
@@ -254,21 +342,45 @@ const UserLogin = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
                     required
-                    disabled={loading}
+                    disabled={loading || isBlocked}
                   />
                   <button
                     type="button"
                     className="password-toggle-btn"
                     onClick={() => setShowLoginPassword(!showLoginPassword)}
-                    disabled={loading}
+                    disabled={loading || isBlocked}
                   >
                     {showLoginPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
                 </div>
               </div>
 
-              <button type="submit" className="auth-submit" disabled={loading}>
-                {loading ? "Logging in..." : "Login"}
+              {/* ⭐⭐⭐ YAHAN PAR "FORGOT PASSWORD?" BUTTON ADD KIYA HAI ⭐⭐⭐ */}
+              <div style={{ textAlign: 'right', marginTop: '-8px', marginBottom: '15px' }}>
+                <button 
+                  type="button" 
+                  onClick={handleForgotPassword} 
+                  disabled={loading || isBlocked}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--primary-brown)',
+                    textDecoration: 'underline',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    fontWeight: '500'
+                  }}
+                >
+                  Forgot Password?
+                </button>
+              </div>
+
+              <button 
+                type="submit" 
+                className="auth-submit" 
+                disabled={loading || isBlocked}
+              >
+                {loading ? "Logging in..." : isBlocked ? "Blocked (5 min)" : "Login"}
               </button>
             </form>
 
@@ -293,16 +405,31 @@ const UserLogin = () => {
             <form onSubmit={handleSignup}>
               <div className="auth-field">
                 <label>Full Name</label>
-                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter your name" required disabled={loading} />
+                <input 
+                  type="text" 
+                  value={name} 
+                  onChange={(e) => setName(e.target.value)} 
+                  placeholder="Enter your name" 
+                  required 
+                  disabled={loading}
+                  maxLength={50}
+                />
               </div>
               <div className="auth-field">
                 <label>Email Address</label>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter your email" required disabled={loading} />
+                <input 
+                  type="email" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)} 
+                  placeholder="Enter your email" 
+                  required 
+                  disabled={loading}
+                  maxLength={100}
+                />
               </div>
               
-              {/* ✅ SIGNUP PASSWORD WITH EYE BUTTON */}
               <div className="auth-field">
-                <label>Password</label>
+                <label>Password (min 8 chars)</label>
                 <div className="password-input-wrapper">
                   <input
                     type={showSignupPassword ? "text" : "password"}
@@ -311,6 +438,7 @@ const UserLogin = () => {
                     placeholder="Create a password"
                     required
                     disabled={loading}
+                    minLength={8}
                   />
                   <button
                     type="button"
@@ -323,7 +451,6 @@ const UserLogin = () => {
                 </div>
               </div>
 
-              {/* ✅ SIGNUP CONFIRM PASSWORD WITH EYE BUTTON */}
               <div className="auth-field">
                 <label>Confirm Password</label>
                 <div className="password-input-wrapper">
@@ -346,7 +473,11 @@ const UserLogin = () => {
                 </div>
               </div>
 
-              <button type="submit" className="auth-submit" disabled={loading}>
+              <button 
+                type="submit" 
+                className="auth-submit" 
+                disabled={loading}
+              >
                 {loading ? "Creating account..." : "Sign Up"}
               </button>
             </form>

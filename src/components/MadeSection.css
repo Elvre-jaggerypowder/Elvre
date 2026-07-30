@@ -1,6 +1,21 @@
+/* ============================================
+   HOW ELVRE IS MADE — unified brand tokens
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500&family=Work+Sans:wght@400;500;600;700&display=swap');
+
 .howmade-section {
+  --forest: #1F3B2C;
+  --forest-deep: #142A1F;
+  --brown: #8B5E3C;
+  --gold: #C68A3D;
+  --cream: #FBF6EC;
+  --paper: #F3ECDD;
+  --ink-soft: #6b6153;
+
   padding: 80px 5%;
-  background: linear-gradient(135deg, #f9f3e8 0%, #fff8f0 100%);
+  background: var(--cream);
+  font-family: 'Work Sans', sans-serif;
 }
 
 .howmade-container {
@@ -14,22 +29,24 @@
 }
 
 .howmade-tag {
-  font-family: 'Livvic', sans-serif;
   font-size: 0.8rem;
   letter-spacing: 3px;
-  color: #f1a40f;
+  color: var(--gold);
   text-transform: uppercase;
+  font-weight: 600;
   display: inline-block;
   margin-bottom: 15px;
 }
 
 .howmade-heading {
-  font-family: 'Livvicsemibold', sans-serif;
-  font-size: 2.5rem;
-  color: #263C28;
+  font-family: 'Fraunces', serif;
+  font-size: 2.4rem;
+  color: var(--forest-deep);
+  font-weight: 700;
   margin-bottom: 20px;
   position: relative;
   display: inline-block;
+  letter-spacing: -0.01em;
 }
 
 .howmade-heading::after {
@@ -40,7 +57,7 @@
   transform: translateX(-50%);
   width: 60px;
   height: 3px;
-  background: #f1a40f;
+  background: var(--gold);
   border-radius: 2px;
 }
 
@@ -59,20 +76,24 @@
   padding: 25px 20px;
   background: white;
   border-radius: 16px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-  transition: transform 0.3s ease;
+  box-shadow: 0 5px 20px rgba(31, 59, 44, 0.06);
+  transition: all 0.3s ease;
+  border: 1px solid #ece2cd;
 }
 
 .step:hover {
   transform: translateY(-5px);
+  border-color: var(--gold);
+  box-shadow: 0 10px 28px rgba(31, 59, 44, 0.1);
 }
 
 .step-number {
   width: 50px;
   height: 50px;
-  background: #f1a40f;
-  color: white;
-  font-family: 'Livvicsemibold', sans-serif;
+  background: var(--gold);
+  color: var(--forest-deep);
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
   font-size: 1.3rem;
   display: flex;
   align-items: center;
@@ -82,53 +103,37 @@
 }
 
 .step h3 {
-  font-family: 'Livvicsemibold', sans-serif;
+  font-family: 'Fraunces', serif;
   font-size: 1.2rem;
-  color: #263C28;
+  color: var(--forest-deep);
+  font-weight: 600;
   margin-bottom: 10px;
 }
 
 .step p {
-  font-family: 'Quicksand', sans-serif;
   font-size: 0.9rem;
-  color: #666;
+  color: var(--ink-soft);
   line-height: 1.5;
 }
 
 .howmade-description {
-  font-family: 'Quicksand', sans-serif;
   font-size: 1rem;
   line-height: 1.8;
-  color: #444;
+  color: var(--ink-soft);
   text-align: center;
   max-width: 800px;
   margin: 0 auto;
   padding: 30px;
   background: white;
   border-radius: 16px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+  box-shadow: 0 5px 20px rgba(31, 59, 44, 0.06);
+  border: 1px solid #ece2cd;
 }
 
 @media (max-width: 768px) {
-  .howmade-section {
-    padding: 50px 5%;
-  }
-  
-  .howmade-heading {
-    font-size: 1.8rem;
-  }
-  
-  .howmade-steps {
-    flex-direction: column;
-    gap: 20px;
-  }
-  
-  .step {
-    min-width: auto;
-  }
-  
-  .howmade-description {
-    padding: 20px;
-    font-size: 0.9rem;
-  }
+  .howmade-section { padding: 50px 5%; }
+  .howmade-heading { font-size: 1.8rem; }
+  .howmade-steps { flex-direction: column; gap: 20px; }
+  .step { min-width: auto; }
+  .howmade-description { padding: 20px; font-size: 0.9rem; }
 }

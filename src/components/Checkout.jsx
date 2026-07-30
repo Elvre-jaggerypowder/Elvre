@@ -2,6 +2,7 @@ import { supabase } from '../supabaseClient';
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
+import PaymentButton from './PaymentButton'; // ✅ Razorpay integration
 import { sendOrderEmails } from '../services/emailService';
 import { 
   sendOTP, 
@@ -26,6 +27,7 @@ const Checkout = () => {
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
   const [step, setStep] = useState(1);
   const [emailSent, setEmailSent] = useState(false);
+  const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
   
   // OTP States
   const [phoneVerified, setPhoneVerified] = useState(false);
@@ -43,7 +45,7 @@ const Checkout = () => {
     city: "",
     state: "",
     pincode: "",
-    paymentMethod: "cod"
+    paymentMethod: "cod" // ✅ default: COD
   });
 
   useEffect(() => {
@@ -385,11 +387,15 @@ const Checkout = () => {
   };
 
   // ============================================================
-  // FIXED placeOrder – includes variant in products
+  // 🔥 PLACE ORDER (called directly for COD, or after payment success)
   // ============================================================
   const placeOrder = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     
+    // Prevent duplicate submission
+    if (isPaymentProcessing) return;
+    
+    // ─── Step 1: Validate Address ───
     if (showNewAddressForm && !selectedAddressId) {
       if (!phoneVerified) {
         alert("Please verify your phone number first");
@@ -403,34 +409,101 @@ const Checkout = () => {
       return;
     }
     
+    setIsPaymentProcessing(true);
+    
     const currentUser = JSON.parse(localStorage.getItem("currentUser"));
     const now = new Date();
     const orderDate = now.toLocaleDateString();
     const orderTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
-    // Update product stock in Supabase
-    for (const item of cart) {
-      const orderedQty = item.quantity || 1;
-      const currentStock = item.stock;
-      const newStock = currentStock - orderedQty;
+    // ─── Step 2: Check and Update Stock in Supabase ───
+    console.log('🔄 Checking stock availability...');
+    
+    const stockCheckPromises = cart.map(async (item) => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, name, stock, variants')
+        .eq('id', item.id)
+        .single();
       
-      if (newStock < 0) {
-        alert(`Insufficient stock for ${item.name}. Only ${currentStock} left.`);
-        return;
+      if (error) {
+        console.error(`Error fetching stock for ${item.name}:`, error);
+        throw new Error(`Could not check stock for ${item.name}`);
       }
       
-      const { error: stockError } = await supabase
-        .from('products')
-        .update({ stock: newStock })
-        .eq('id', item.id);
+      return { ...item, dbStock: data.stock, dbVariants: data.variants };
+    });
+    
+    let stockData;
+    try {
+      stockData = await Promise.all(stockCheckPromises);
+    } catch (err) {
+      alert(`❌ ${err.message}. Please try again.`);
+      setIsPaymentProcessing(false);
+      return;
+    }
+    
+    for (const item of stockData) {
+      const orderedQty = item.quantity || 1;
+      let availableStock = item.dbStock;
       
-      if (stockError) {
-        console.error('Stock update error:', stockError);
-        // Continue anyway – we'll still create the order
+      if (item.variant && item.dbVariants) {
+        const variant = item.dbVariants.find(v => v.label === item.variant);
+        if (variant) {
+          availableStock = variant.stock || 0;
+        }
+      }
+      
+      if (availableStock < orderedQty) {
+        alert(`❌ Insufficient stock for ${item.name}${item.variant ? ` (${item.variant})` : ''}. Only ${availableStock} left.`);
+        setIsPaymentProcessing(false);
+        return;
       }
     }
     
-    // Update localStorage products
+    // ─── Step 3: Update Stock ───
+    console.log('📦 Updating stock in Supabase...');
+    const updatePromises = stockData.map(async (item) => {
+      const orderedQty = item.quantity || 1;
+      let newStock = item.dbStock - orderedQty;
+      let updateData = { stock: newStock };
+      
+      if (item.variant && item.dbVariants) {
+        const updatedVariants = item.dbVariants.map(v => {
+          if (v.label === item.variant) {
+            return { ...v, stock: (v.stock || 0) - orderedQty };
+          }
+          return v;
+        });
+        updateData = { 
+          stock: newStock,
+          variants: updatedVariants 
+        };
+      }
+      
+      const { error } = await supabase
+        .from('products')
+        .update(updateData)
+        .eq('id', item.id);
+      
+      if (error) {
+        console.error(`Error updating stock for ${item.name}:`, error);
+        throw new Error(`Failed to update stock for ${item.name}`);
+      }
+      
+      return { id: item.id, newStock };
+    });
+    
+    try {
+      await Promise.all(updatePromises);
+      console.log('✅ Stock updated successfully!');
+    } catch (err) {
+      alert(`❌ ${err.message}. Order not placed. Please try again.`);
+      setIsPaymentProcessing(false);
+      return;
+    }
+    
+    // ─── Step 4: Update localStorage ───
     const allProducts = JSON.parse(localStorage.getItem("elvreProducts") || "[]");
     const updatedProducts = allProducts.map(product => {
       const orderedItem = cart.find(item => item.id === product.id);
@@ -443,7 +516,7 @@ const Checkout = () => {
     localStorage.setItem("elvreProducts", JSON.stringify(updatedProducts));
     window.dispatchEvent(new Event("productsUpdated"));
     
-    // Build the order object – include variant
+    // ─── Step 5: Build Order ───
     const newOrder = {
       id: "ORD" + Date.now(),
       customer: formData.fullName,
@@ -453,7 +526,7 @@ const Checkout = () => {
       products: cart.map(item => ({
         id: item.id,
         name: item.name,
-        variant: item.variant || null, // ✅ store variant
+        variant: item.variant || null,
         price: item.priceValue || parseFloat(item.price?.replace('₹', '')) || 0,
         quantity: item.quantity || 1,
         image: item.image
@@ -463,64 +536,57 @@ const Checkout = () => {
       discount: 0,
       total: total,
       payment_method: formData.paymentMethod === "cod" ? "Cash on Delivery" : "Online Payment",
-      payment_status: "pending",
+      payment_status: formData.paymentMethod === "cod" ? "pending" : "paid", // ✅ Online payment marked paid
       status: "pending",
       order_date: orderDate,
       order_time: orderTime,
       created_at: now.toISOString()
     };
 
-    // ------------------------------------------------------------
-    // 🔥 SAVE ORDER TO SUPABASE
-    // ------------------------------------------------------------
-    console.log('💾 Attempting to save order to Supabase:', newOrder);
-    let supabaseSuccess = false;
-
+    // ─── Step 6: Save Order ───
+    console.log('💾 Saving order:', newOrder.id);
+    
     try {
       const { data, error } = await supabase
         .from('orders')
         .insert([newOrder]);
 
       if (error) {
-        console.error('❌ Supabase order insert error:', error);
-        alert('Order placed, but could not save to cloud. We\'ll keep your order locally.');
+        console.error('❌ Supabase error:', error);
       } else {
-        console.log('✅ Order saved to Supabase successfully!', data);
-        supabaseSuccess = true;
+        console.log('✅ Order saved to Supabase!', data);
       }
     } catch (err) {
-      console.error('❌ Exception while saving to Supabase:', err);
-      alert('Order placed, but could not save to cloud. We\'ll keep your order locally.');
+      console.error('❌ Exception:', err);
     }
 
-    // Always save to localStorage as backup
+    // ─── Step 7: Save to localStorage ───
     const existingOrders = JSON.parse(localStorage.getItem("elvreOrders") || "[]");
     existingOrders.unshift(newOrder);
     localStorage.setItem("elvreOrders", JSON.stringify(existingOrders));
 
-    // Clear cart
+    // ─── Step 8: Clear Cart ───
     localStorage.removeItem("cart");
     setCart([]);
     window.dispatchEvent(new Event("storage"));
 
-    // Send order confirmation emails
+    // ─── Step 9: Send Emails ───
     if (!emailSent) {
       try {
-        console.log('📧 Sending order emails for order:', newOrder.id);
+        console.log('📧 Sending order emails...');
         const emailResult = await sendOrderEmails(newOrder);
         if (emailResult.success) {
-          console.log('✅ Order emails sent successfully!');
-        } else {
-          console.warn('⚠️ Order emails failed to send');
+          console.log('✅ Order emails sent!');
         }
         setEmailSent(true);
       } catch (emailErr) {
-        console.error('❌ Email sending error:', emailErr);
+        console.error('❌ Email error:', emailErr);
       }
     }
 
     setOrderId(newOrder.id);
     setOrderPlaced(true);
+    setIsPaymentProcessing(false);
 
     setTimeout(() => {
       navigate(`/order-tracking/${newOrder.id}`);
@@ -706,32 +772,61 @@ const Checkout = () => {
               ) : (
                 <>
                   <h2>Payment Method</h2>
+                  
+                  {/* ✅ UPDATED PAYMENT METHODS */}
                   <div className="payment-methods-list">
-                    <div className="payment-method-card selected">
-                      <input type="radio" checked readOnly />
+                    {/* COD */}
+                    <div 
+                      className={`payment-method-card ${formData.paymentMethod === 'cod' ? 'selected' : ''}`}
+                      onClick={() => setFormData({...formData, paymentMethod: 'cod'})}
+                    >
+                      <input type="radio" checked={formData.paymentMethod === 'cod'} readOnly />
                       <div className="payment-method-info">
                         <strong>💵 Cash on Delivery (COD)</strong>
                         <p>Pay when you receive your order</p>
                       </div>
                     </div>
-                    <div className="payment-method-card disabled">
-                      <input type="radio" disabled />
+                    
+                    {/* Online Payment - Razorpay */}
+                    <div 
+                      className={`payment-method-card ${formData.paymentMethod === 'online' ? 'selected' : ''}`}
+                      onClick={() => setFormData({...formData, paymentMethod: 'online'})}
+                    >
+                      <input type="radio" checked={formData.paymentMethod === 'online'} readOnly />
                       <div className="payment-method-info">
-                        <strong>💳 Credit/Debit Card</strong>
-                        <p>Coming soon</p>
-                      </div>
-                    </div>
-                    <div className="payment-method-card disabled">
-                      <input type="radio" disabled />
-                      <div className="payment-method-info">
-                        <strong>📱 UPI / Wallet</strong>
-                        <p>Coming soon</p>
+                        <strong>💳 Online Payment</strong>
+                        <p>UPI • Credit/Debit Card • Net Banking (Razorpay)</p>
                       </div>
                     </div>
                   </div>
+                  
                   <div className="payment-actions">
                     <button type="button" className="back-btn" onClick={handleBackToAddress}>← Back to Address</button>
-                    <button className="place-order-btn" onClick={placeOrder}>Place Order</button>
+                    
+                    {formData.paymentMethod === 'cod' ? (
+                      <button 
+                        className="place-order-btn" 
+                        onClick={placeOrder}
+                        disabled={isPaymentProcessing}
+                      >
+                        {isPaymentProcessing ? 'Processing...' : 'Place Order'}
+                      </button>
+                    ) : (
+                      <PaymentButton
+                        amount={total}
+                        orderId={`ORD${Date.now()}`}
+                        customerDetails={{
+                          name: formData.fullName,
+                          email: formData.email,
+                          phone: formData.phone
+                        }}
+                        onSuccess={() => {
+                          // ✅ Payment successful → place order
+                          console.log('✅ Payment success! Placing order...');
+                          placeOrder();
+                        }}
+                      />
+                    )}
                   </div>
                 </>
               )}
@@ -743,7 +838,6 @@ const Checkout = () => {
                 {cart.map((item, idx) => {
                   const price = item.priceValue || parseFloat(item.price?.replace('₹', '')) || 0;
                   const qty = item.quantity || 1;
-                  // ✅ Display variant if present
                   const displayName = item.variant ? `${item.name} (${item.variant})` : item.name;
                   return (
                     <div key={idx} className="summary-product">

@@ -7,6 +7,10 @@ const Testimonial = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const intervalRef = useRef(null);
+  
+  // ─── SWIPE STATE ───
+  const [touchStartX, setTouchStartX] = useState(0);
+  const [touchEndX, setTouchEndX] = useState(0);
 
   useEffect(() => {
     loadFeedbacks();
@@ -34,7 +38,6 @@ const Testimonial = () => {
   const loadFeedbacks = async () => {
     setLoading(true);
     try {
-      // Use '*' to avoid column mismatch
       const { data, error } = await supabase
         .from('Feedbacks')
         .select('*')
@@ -117,6 +120,25 @@ const Testimonial = () => {
     }
   };
 
+  // ─── SWIPE HANDLERS ───
+  const handleTouchStart = (e) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e) => {
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX - touchEndX;
+    const threshold = 30; // minimum swipe distance
+    
+    if (Math.abs(diff) > threshold) {
+      if (diff > 0) {
+        goNext(); // swipe left → next
+      } else {
+        goPrev(); // swipe right → previous
+      }
+    }
+  };
+
   if (loading) {
     return <div className="testimonial-loading">Loading...</div>;
   }
@@ -137,20 +159,37 @@ const Testimonial = () => {
               <h2 className="testimonial-heading">OUR TESTIMONIALS</h2>
               <p className="testimonial-subheading">What They’re Talking About</p>
 
-              <div className="testimonial-card">
-                <div className="quote-icon">❝</div>
-                <p className="testimonial-message">{current.message}</p>
-                <div className="testimonial-user">
-                  <div className="user-avatar">
-                    {current.name?.charAt(0) || "A"}
-                  </div>
-                  <div>
-                    <h4>{current.name}</h4>
-                    <div className="stars">
-                      {"★".repeat(current.rating || 5)}{"☆".repeat(5 - (current.rating || 5))}
+              {/* ─── SWIPE CONTAINER ─── */}
+              <div 
+                className="testimonial-swipe-container"
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+              >
+                <div className="testimonial-card">
+                  <div className="quote-icon">❝</div>
+                  <p className="testimonial-message">{current.message}</p>
+                  <div className="testimonial-user">
+                    <div className="user-avatar">
+                      {current.name?.charAt(0) || "A"}
+                    </div>
+                    <div>
+                      <h4>{current.name}</h4>
+                      <div className="stars">
+                        {"★".repeat(current.rating || 5)}{"☆".repeat(5 - (current.rating || 5))}
+                      </div>
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* ─── ARROW BUTTONS ─── */}
+              <div className="slider-arrows">
+                <button className="arrow-btn arrow-prev" onClick={goPrev}>
+                  ◀
+                </button>
+                <button className="arrow-btn arrow-next" onClick={goNext}>
+                  ▶
+                </button>
               </div>
 
               <div className="slider-controls">

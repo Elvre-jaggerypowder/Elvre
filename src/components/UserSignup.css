@@ -105,7 +105,7 @@
 }
 
 /* ============================================
-   ⭐ PASSWORD INPUT WITH EYE BUTTON - YE ADD KIYA HAI
+   PASSWORD INPUT WITH EYE BUTTON
    ============================================ */
 .password-input-wrapper {
   position: relative;
@@ -253,11 +253,6 @@
   .signup-btn {
     padding: 14px;
     font-size: 0.95rem;
-  }
-
-  /* ✅ Mobile mein eye button adjust */
-  .password-input-wrapper input {
-    padding-right: 40px !important;
   }
 
   .password-toggle-btn {

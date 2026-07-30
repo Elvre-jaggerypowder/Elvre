@@ -31,6 +31,7 @@
   transition: right 0.3s ease;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box; /* ⭐ YEH ADD KIYA - extra padding/shadow ko andar rakhega */
 }
 
 .cart-drawer.open {
@@ -225,10 +226,17 @@
   transform: translateY(-2px);
 }
 
-/* ===== RESPONSIVE ===== */
+/* ===== RESPONSIVE - Mobile pe perfect ===== */
 @media (max-width: 480px) {
   .cart-drawer {
-    width: 100%;
-    max-width: 100%;
+    width: 100%; /* Poori screen width */
+    max-width: 100%; /* Koi limit nahi */
+    right: -100%; /* 100% se bahar push karo */
+    box-shadow: -5px 0 25px rgba(0, 0, 0, 0.15); /* Thoda shadow aur premium */
+  }
+  
+  /* Jab open ho tab right 0 pe aajaye */
+  .cart-drawer.open {
+    right: 0;
   }
 }

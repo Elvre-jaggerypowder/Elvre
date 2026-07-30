@@ -1,10 +1,21 @@
 /* ============================================
-   BENEFIT SECTION - COMPLETE FIX
+   BENEFIT SECTION — unified brand tokens
    ============================================ */
 
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500&family=Work+Sans:wght@400;500;600;700&display=swap');
+
 .benefit-section {
+  --forest: #1F3B2C;
+  --forest-deep: #142A1F;
+  --brown: #8B5E3C;
+  --gold: #C68A3D;
+  --cream: #FBF6EC;
+  --paper: #F3ECDD;
+  --ink-soft: #6b6153;
+
   padding: 80px 20px;
-  background: #f5f7fa;
+  background: var(--paper);
+  font-family: 'Work Sans', sans-serif;
 }
 
 .benefit-container {
@@ -18,22 +29,33 @@
   margin-bottom: 50px;
 }
 
+.benefit-tag {
+  font-size: 0.8rem;
+  letter-spacing: 3px;
+  color: var(--gold);
+  text-transform: uppercase;
+  font-weight: 600;
+  display: inline-block;
+  margin-bottom: 14px;
+}
+
 .benefit-header h2 {
-  font-size: 2.5rem;
-  color: #1a2e1e;
+  font-family: 'Fraunces', serif;
+  font-size: 2.4rem;
+  color: var(--forest-deep);
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: -0.01em;
   margin-bottom: 10px;
 }
 
 .benefit-header h2 span {
-  color: #8B5E3C;
+  color: var(--brown);
 }
 
 .benefit-header p {
   font-size: 1rem;
-  color: #666;
-  letter-spacing: 3px;
+  color: var(--ink-soft);
+  letter-spacing: 1px;
 }
 
 /* ===== 3-COLUMN GRID ===== */
@@ -51,37 +73,38 @@
   border-radius: 16px;
   padding: 35px 25px;
   text-align: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 20px rgba(31, 59, 44, 0.06);
   transition: all 0.3s ease;
-  border: 1px solid #e8e8e8;
+  border: 1px solid #ece2cd;
 }
 
 .benefit-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
-  border-color: #8B5E3C;
+  box-shadow: 0 12px 40px rgba(31, 59, 44, 0.12);
+  border-color: var(--gold);
 }
 
 /* ===== ICON ===== */
 .benefit-icon {
-  font-size: 48px;
+  font-size: 46px;
   display: block;
   margin-bottom: 15px;
 }
 
 /* ===== TITLE ===== */
 .benefit-card h3 {
-  font-size: 20px;
-  color: #1a2e1e;
+  font-family: 'Fraunces', serif;
+  font-size: 19px;
+  color: var(--forest-deep);
   margin-bottom: 12px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 /* ===== LINE ===== */
 .benefit-line {
   width: 40px;
   height: 3px;
-  background: #8B5E3C;
+  background: var(--gold);
   margin: 0 auto 15px;
   border-radius: 2px;
 }
@@ -89,7 +112,7 @@
 /* ===== DESCRIPTION ===== */
 .benefit-card p {
   font-size: 14px;
-  color: #555;
+  color: var(--ink-soft);
   line-height: 1.7;
   margin: 0;
 }
@@ -100,35 +123,16 @@
     grid-template-columns: repeat(2, 1fr);
     gap: 25px;
   }
-
   .benefit-header h2 {
     font-size: 2rem;
   }
 }
 
 @media (max-width: 768px) {
-  .benefit-section {
-    padding: 60px 15px;
-  }
-
-  .benefit-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-
-  .benefit-card {
-    padding: 25px 20px;
-  }
-
-  .benefit-header h2 {
-    font-size: 1.6rem;
-  }
-
-  .benefit-card h3 {
-    font-size: 17px;
-  }
-
-  .benefit-icon {
-    font-size: 36px;
-  }
+  .benefit-section { padding: 60px 15px; }
+  .benefit-grid { grid-template-columns: 1fr; gap: 20px; }
+  .benefit-card { padding: 25px 20px; }
+  .benefit-header h2 { font-size: 1.6rem; }
+  .benefit-card h3 { font-size: 17px; }
+  .benefit-icon { font-size: 36px; }
 }

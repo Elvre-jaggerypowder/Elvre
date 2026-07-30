@@ -1,24 +1,49 @@
-/* ===== TALES SECTION ===== */
+/* ===== TALES SECTION — unified brand tokens ===== */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500&family=Work+Sans:wght@400;500;600;700&display=swap');
+
 .tales-section {
-  padding: 40px 10px;
-  background: var(--light-bg);
-  font-family: 'Times New Roman', Times, serif;
+  --forest: #1F3B2C;
+  --forest-deep: #142A1F;
+  --brown: #8B5E3C;
+  --gold: #C68A3D;
+  --cream: #FBF6EC;
+  --paper: #F3ECDD;
+  --ink-soft: #6b6153;
+
+  padding: 70px 10px;
+  background: var(--cream);
+  font-family: 'Work Sans', sans-serif;
 }
 
 .tales-header {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 34px;
+}
+
+.tales-tag {
+  font-size: 0.8rem;
+  letter-spacing: 3px;
+  color: var(--gold);
+  text-transform: uppercase;
+  font-weight: 600;
+  display: inline-block;
+  margin-bottom: 12px;
 }
 
 .tales-header .section-title {
-  color: var(--primary-green);
+  font-family: 'Fraunces', serif;
+  color: var(--forest-deep);
   font-size: 2rem;
-  margin-bottom: 5px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
 }
 
 .tales-header .section-subtitle {
-  color: var(--primary-brown);
-  letter-spacing: 3px;
+  color: var(--ink-soft);
+  letter-spacing: 1px;
+  font-size: 0.9rem;
 }
 
 /* ===== HORIZONTAL SCROLL ===== */
@@ -30,14 +55,8 @@
   padding: 10px 0;
 }
 
-.tales-scroll-wrapper::-webkit-scrollbar {
-  height: 4px;
-}
-
-.tales-scroll-wrapper::-webkit-scrollbar-thumb {
-  background: var(--primary-brown);
-  border-radius: 4px;
-}
+.tales-scroll-wrapper::-webkit-scrollbar { height: 4px; }
+.tales-scroll-wrapper::-webkit-scrollbar-thumb { background: var(--brown); border-radius: 4px; }
 
 .tales-grid {
   display: flex;
@@ -53,14 +72,16 @@
   background: white;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+  box-shadow: 0 4px 15px rgba(31, 59, 44, 0.07);
+  border: 1px solid #ece2cd;
   transition: all 0.3s ease;
   cursor: pointer;
 }
 
 .tale-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  box-shadow: 0 8px 30px rgba(31, 59, 44, 0.14);
+  border-color: var(--gold);
 }
 
 .tale-video-wrapper {
@@ -77,19 +98,27 @@
   background: #111;
 }
 
+/* Shown instead of the video if the file fails to load */
+.tale-video-fallback {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: var(--paper);
+}
+
 .tale-product-badge {
   position: absolute;
   bottom: 50px;
   left: 12px;
   right: 12px;
-  background: rgba(0,0,0,0.65);
+  background: rgba(20, 42, 31, 0.72);
   backdrop-filter: blur(6px);
   padding: 6px 12px;
   border-radius: 30px;
   display: flex;
   align-items: center;
   gap: 10px;
-  color: white;
+  color: var(--cream);
   font-size: 12px;
   pointer-events: none;
 }
@@ -135,11 +164,8 @@
 /* ===== MODAL ===== */
 .tales-modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.7);
+  inset: 0;
+  background: rgba(20, 42, 31, 0.72);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
@@ -156,10 +182,10 @@
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
-  animation: slideUp 0.3s ease;
+  animation: talesSlideUp 0.3s ease;
 }
 
-@keyframes slideUp {
+@keyframes talesSlideUp {
   from { transform: translateY(30px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
@@ -174,11 +200,9 @@
   cursor: pointer;
   color: #333;
   z-index: 10;
+  transition: transform 0.2s;
 }
-
-.modal-close:hover {
-  transform: rotate(90deg);
-}
+.modal-close:hover { transform: rotate(90deg); }
 
 .modal-content {
   display: grid;
@@ -204,7 +228,7 @@
 
 .modal-video-caption {
   padding: 16px;
-  background: #f9f9f9;
+  background: var(--paper);
   color: #333;
   text-align: center;
 }
@@ -214,12 +238,13 @@
   display: block;
   font-size: 14px;
   margin-bottom: 4px;
+  color: var(--forest-deep);
 }
 
 .modal-video-caption p {
   font-size: 13px;
   font-style: italic;
-  color: #666;
+  color: var(--ink-soft);
   margin: 0;
 }
 
@@ -231,13 +256,15 @@
 }
 
 .modal-product-info h3 {
+  font-family: 'Fraunces', serif;
   font-size: 22px;
-  color: var(--primary-green);
+  font-weight: 600;
+  color: var(--forest-deep);
   margin: 0;
 }
 
 .product-description {
-  color: #666;
+  color: var(--ink-soft);
   font-size: 14px;
   line-height: 1.6;
   margin: 0;
@@ -251,8 +278,8 @@
 
 .current-price {
   font-size: 24px;
-  font-weight: bold;
-  color: var(--primary-brown);
+  font-weight: 700;
+  color: var(--brown);
 }
 
 .original-price {
@@ -285,7 +312,7 @@
 .variant-btn,
 .color-btn {
   padding: 8px 16px;
-  border: 1px solid #ddd;
+  border: 1px solid #ddd0b3;
   border-radius: 20px;
   background: white;
   cursor: pointer;
@@ -296,8 +323,8 @@
 
 .variant-btn.active,
 .color-btn.active {
-  border-color: var(--primary-brown);
-  background: var(--primary-brown);
+  border-color: var(--brown);
+  background: var(--brown);
   color: white;
 }
 
@@ -312,28 +339,27 @@
   padding: 12px;
   border: none;
   border-radius: 30px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.3s;
 }
 
 .add-to-cart-btn {
-  background: var(--primary-brown);
-  color: white;
+  background: var(--gold);
+  color: var(--forest-deep);
 }
-
 .add-to-cart-btn:hover {
-  background: var(--primary-brown-dark);
+  background: var(--forest);
+  color: var(--cream);
   transform: translateY(-2px);
 }
 
 .buy-now-btn {
-  background: var(--gold);
-  color: var(--primary-green);
+  background: var(--forest);
+  color: var(--cream);
 }
-
 .buy-now-btn:hover {
-  background: var(--gold-dark);
+  background: var(--forest-deep);
   transform: translateY(-2px);
 }
 
@@ -343,129 +369,49 @@
   gap: 12px;
   margin-top: 4px;
   font-size: 13px;
-  color: #666;
+  color: var(--ink-soft);
 }
 
 .modal-trust-badges span {
-  background: var(--light-bg);
+  background: var(--paper);
   padding: 4px 12px;
   border-radius: 20px;
 }
 
 /* ============================================
-   MOBILE FIRST – IMPROVED MODAL
+   MOBILE
    ============================================ */
 @media (max-width: 768px) {
-  .tale-card {
-    flex: 0 0 200px;
-  }
+  .tale-card { flex: 0 0 200px; }
 
-  /* Modal becomes single column */
   .modal-content {
     grid-template-columns: 1fr;
     gap: 20px;
     padding: 20px;
   }
-
-  .modal-video-wrapper {
-    max-height: 350px;
-  }
-
-  .modal-video {
-    aspect-ratio: 9 / 16;
-    max-height: 300px;
-  }
-
-  /* Improve product info layout */
-  .modal-product-info {
-    gap: 12px;
-  }
-
-  .modal-product-info h3 {
-    font-size: 20px;
-  }
-
-  .current-price {
-    font-size: 22px;
-  }
-
-  .variant-btn,
-  .color-btn {
-    font-size: 14px;
-    padding: 10px 18px;
-  }
-
-  /* Stack action buttons vertically */
-  .modal-actions {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .modal-actions button {
-    padding: 14px;
-    font-size: 16px;
-  }
-
-  .modal-trust-badges {
-    justify-content: center;
-    gap: 8px;
-  }
+  .modal-video-wrapper { max-height: 350px; }
+  .modal-video { aspect-ratio: 9 / 16; max-height: 300px; }
+  .modal-product-info { gap: 12px; }
+  .modal-product-info h3 { font-size: 20px; }
+  .current-price { font-size: 22px; }
+  .variant-btn, .color-btn { font-size: 14px; padding: 10px 18px; }
+  .modal-actions { flex-direction: column; gap: 10px; }
+  .modal-actions button { padding: 14px; font-size: 16px; }
+  .modal-trust-badges { justify-content: center; gap: 8px; }
 }
 
 @media (max-width: 480px) {
-  .tale-card {
-    flex: 0 0 160px;
-  }
+  .tale-card { flex: 0 0 160px; }
+  .tale-product-badge { font-size: 9px; padding: 3px 8px; bottom: 30px; }
+  .tale-product-badge img { width: 14px; height: 14px; }
+  .tale-customer-name { font-size: 9px; bottom: 8px; left: 8px; }
+  .tale-quote { font-size: 10px; padding: 8px; }
+  .tale-quote p { -webkit-line-clamp: 1; line-clamp: 1; }
 
-  .tale-product-badge {
-    font-size: 9px;
-    padding: 3px 8px;
-    bottom: 30px;
-  }
-  .tale-product-badge img {
-    width: 14px;
-    height: 14px;
-  }
-  .tale-customer-name {
-    font-size: 9px;
-    bottom: 8px;
-    left: 8px;
-  }
-  .tale-quote {
-    font-size: 10px;
-    padding: 8px;
-  }
-  .tale-quote p {
-    -webkit-line-clamp: 1;
-    line-clamp: 1;
-  }
-
-  /* Modal further refinement */
-  .modal-content {
-    padding: 16px;
-  }
-
-  .modal-product-info h3 {
-    font-size: 18px;
-  }
-
-  .current-price {
-    font-size: 20px;
-  }
-
-  .variant-btn,
-  .color-btn {
-    font-size: 13px;
-    padding: 8px 14px;
-  }
-
-  .modal-actions button {
-    padding: 12px;
-    font-size: 15px;
-  }
-
-  .modal-trust-badges span {
-    font-size: 11px;
-    padding: 4px 10px;
-  }
+  .modal-content { padding: 16px; }
+  .modal-product-info h3 { font-size: 18px; }
+  .current-price { font-size: 20px; }
+  .variant-btn, .color-btn { font-size: 13px; padding: 8px 14px; }
+  .modal-actions button { padding: 12px; font-size: 15px; }
+  .modal-trust-badges span { font-size: 11px; padding: 4px 10px; }
 }

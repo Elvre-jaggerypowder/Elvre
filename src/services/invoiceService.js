@@ -7,15 +7,50 @@ export const generateOrderInvoice = async (order) => {
       // Helper: format currency
       const formatCurrency = (amount) => `₹${Number(amount).toFixed(2)}`;
 
+      // ✅ FIX: safely turn a value into a real number, whether it comes in
+      // as a number (199) or as a formatted string ("₹199", "1,299", etc).
+      // Without this, a string price would silently break the math below
+      // (e.g. "₹199" * 2 === NaN, or string concatenation instead of addition).
+      const toNumber = (val) => {
+        if (typeof val === "number" && !isNaN(val)) return val;
+        if (typeof val === "string") {
+          const cleaned = val.replace(/[^0-9.-]/g, "");
+          const parsed = parseFloat(cleaned);
+          return isNaN(parsed) ? 0 : parsed;
+        }
+        return 0;
+      };
+
       // Generate invoice number
       const invoiceNumber = `ELV-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 100000)).padStart(5, '0')}`;
       const today = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 
+      // ✅ FIX: normalize every line item first — price and quantity are
+      // guaranteed to be real numbers, and each line's amount is computed
+      // once here so the table and the totals section can never disagree.
+      const normalizedProducts = (order.products || []).map((p) => {
+        const price = toNumber(p.price);
+        const quantity = toNumber(p.quantity) || 1;
+        return {
+          ...p,
+          price,
+          quantity,
+          lineTotal: price * quantity,
+        };
+      });
+
+      // ✅ FIX (the actual bug): subtotal used to come from `order.subtotal`,
+      // a separate field that could be stale or out of sync with what's
+      // actually in `order.products` — that mismatch is what was showing
+      // "fake"/wrong totals on the invoice. Now it's always derived directly
+      // from the real line items, so the invoice can never show a total
+      // that doesn't match the products actually listed on it.
+      const subtotal = normalizedProducts.reduce((sum, p) => sum + p.lineTotal, 0);
+
       // GST calculation
       const gstRate = 0.025;
-      const subtotal = order.subtotal || 0;
-      const discount = order.discount || 0;
-      const shipping = order.shipping || 0;
+      const discount = toNumber(order.discount);
+      const shipping = toNumber(order.shipping);
       const taxableAmount = subtotal - discount;
       const cgst = taxableAmount * gstRate;
       const sgst = taxableAmount * gstRate;
@@ -110,7 +145,7 @@ export const generateOrderInvoice = async (order) => {
                 </tr>
               </thead>
               <tbody>
-                ${order.products.map(p => `
+                ${normalizedProducts.map(p => `
                   <tr>
                     <td style="padding:12px 12px; font-size:12.5px; border-bottom:1px solid #E4D6C1; vertical-align:top;">
                       <div style="font-weight:600; color:#33210F;">${p.name}${p.variant ? ` (${p.variant})` : ''}</div>
@@ -119,7 +154,7 @@ export const generateOrderInvoice = async (order) => {
                     <td style="padding:12px 12px; font-size:12.5px; border-bottom:1px solid #E4D6C1; vertical-align:top; text-align:center; font-family:'Courier New',monospace;">1701</td>
                     <td style="padding:12px 12px; font-size:12.5px; border-bottom:1px solid #E4D6C1; vertical-align:top; text-align:center;">${p.quantity}</td>
                     <td style="padding:12px 12px; font-size:12.5px; border-bottom:1px solid #E4D6C1; vertical-align:top; text-align:right; font-family:'Courier New',monospace;">${formatCurrency(p.price)}</td>
-                    <td style="padding:12px 12px; font-size:12.5px; border-bottom:1px solid #E4D6C1; vertical-align:top; text-align:right; font-family:'Courier New',monospace;">${formatCurrency(p.price * p.quantity)}</td>
+                    <td style="padding:12px 12px; font-size:12.5px; border-bottom:1px solid #E4D6C1; vertical-align:top; text-align:right; font-family:'Courier New',monospace;">${formatCurrency(p.lineTotal)}</td>
                   </tr>
                 `).join('')}
                 <tr>

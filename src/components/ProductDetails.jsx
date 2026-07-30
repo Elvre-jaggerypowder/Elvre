@@ -116,6 +116,9 @@ const ProductDetails = () => {
           const updated = products.map(p => p.id === foundProduct.id ? foundProduct : p);
           localStorage.setItem("elvreProducts", JSON.stringify(updated));
         }
+
+        // ✅ Load related products from the same category
+        loadRelatedProducts(foundProduct);
       } else {
         // fallback to localStorage
         const savedProducts = localStorage.getItem("elvreProducts");
@@ -127,6 +130,7 @@ const ProductDetails = () => {
             if (foundProduct.variants && foundProduct.variants.length > 0) {
               setSelectedVariant(foundProduct.variants[0]);
             }
+            loadRelatedProducts(foundProduct);
           }
         }
       }
@@ -134,6 +138,47 @@ const ProductDetails = () => {
       console.error('❌ loadProduct error:', err);
     }
     setLoading(false);
+  };
+
+  // ─── LOAD RELATED PRODUCTS (same category, excluding current) ───
+  const loadRelatedProducts = async (currentProduct) => {
+    if (!currentProduct?.category) {
+      setRelatedProducts([]);
+      return;
+    }
+    try {
+      const { data: related, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('category', currentProduct.category)
+        .neq('id', currentProduct.id)
+        .limit(4);
+
+      if (!error && related && related.length > 0) {
+        const mapped = related.map(p => ({
+          id: p.id,
+          name: p.name,
+          price: `₹${p.price}`,
+          image: p.image || "/assets/jaggery.png"
+        }));
+        setRelatedProducts(mapped);
+      } else {
+        // fallback to localStorage cache
+        const savedProducts = localStorage.getItem("elvreProducts");
+        if (savedProducts) {
+          const products = JSON.parse(savedProducts);
+          const mapped = products
+            .filter(p => p.category === currentProduct.category && p.id !== currentProduct.id)
+            .slice(0, 4);
+          setRelatedProducts(mapped);
+        } else {
+          setRelatedProducts([]);
+        }
+      }
+    } catch (err) {
+      console.error('❌ loadRelatedProducts error:', err);
+      setRelatedProducts([]);
+    }
   };
 
   // ─── LOAD REVIEWS ───
@@ -297,7 +342,7 @@ const ProductDetails = () => {
   return (
     <>
       <Navbar />
-      <div className="product-detail-page">
+      <div className={`product-detail-page ${currentStock > 0 ? 'has-sticky-bar' : ''}`}>
         <div className="product-detail-container">
           <div className="back-btn-wrapper">
             <button className="back-btn" onClick={() => navigate(-1)}>
@@ -562,7 +607,7 @@ const ProductDetails = () => {
           <div className="sticky-container">
             <div className="sticky-product-info">
               <img src={product.image} alt={product.name} className="sticky-product-image" />
-              <div>
+              <div className="sticky-product-text">
                 <h4>{product.name}{selectedVariant ? ` (${selectedVariant.label})` : ''}</h4>
                 <p className="sticky-price">₹{currentPrice}</p>
               </div>
