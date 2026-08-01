@@ -26,7 +26,7 @@ function HeroSection() {
       {/* Fixed: Book Now button goes to Products page */}
       <Link to="/products">
         <button className="buy-now-btn" data-aos="zoom-in" data-aos-delay="500">
-          🛒 Book Now
+          🛒 Order Now
         </button>
       </Link>
     </section>
