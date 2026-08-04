@@ -69,7 +69,7 @@ const Footer = () => {
           <div className="footer-social">
             <a href="https://wa.me/917906396629" target="_blank" rel="noreferrer"><FaWhatsapp /></a>
             <a href="https://www.facebook.com/profile.php?id=61579641740801" target="_blank" rel="noreferrer"><FaFacebookF /></a>
-            <a href="https://www.instagram.com/elvre_officals_/" target="_blank" rel="noreferrer"><FaInstagram /></a>
+            <a href="https://www.instagram.com/elvre.farmessence/" target="_blank" rel="noreferrer"><FaInstagram /></a>
             <a href="https://www.linkedin.com/company/elvre-enterprised-private-limited/" target="_blank" rel="noreferrer"><FaLinkedinIn /></a>
           </div>
           <div className="footer-policies">
