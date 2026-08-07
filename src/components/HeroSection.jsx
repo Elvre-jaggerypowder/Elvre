@@ -5,28 +5,30 @@ function HeroSection() {
   return (
     <section id="hero" className="hero-section">
       <div className="image-slider">
-        <img
-          src={`${process.env.PUBLIC_URL}/assets/jaggery.png`}
-          className="slide-image jaggery-img"
-          alt="Jaggery Background"
-        />
-        <img
-          src={`${process.env.PUBLIC_URL}/assets/productpacking.png`}
-          className="slide-image product-img"
-          alt="Product Packing"
-        />
+    <img
+      src={`${process.env.PUBLIC_URL}/assets/newproduct.png`}
+      className="hero-product-image"
+      alt="Product Packing"
+    />
+      <div className="product-highlight">
+        <h2 className="highlight-text">A Natural source</h2>
+        <h2 className="highlight-text1">of Energy</h2>
       </div>
+      
+      <div className="hero-tagline">
+        <h2 className="tagline-title">Keeps Digestion</h2>
+        <h2 className="tagline-title1">Smooth</h2>
+       </div>
 
-      <div className="hero-text" data-aos="fade-down" data-aos-duration="1500">
-        <h1>
-          Cane Jaggery Products <span>Handcrafted by Farmers</span>
-        </h1>
-      </div>
+       <div className="hero-tagline1">
+        <h2 className="tagline-title3">Rich in</h2>
+        <h2 className="tagline-title2">Minerals and Vitamins</h2>
+        </div>
+    </div>
 
-      {/* Fixed: Book Now button goes to Products page */}
       <Link to="/products">
         <button className="buy-now-btn" data-aos="zoom-in" data-aos-delay="500">
-          🛒 Book Now
+          🛒 Order Now
         </button>
       </Link>
     </section>
