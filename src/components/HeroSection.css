@@ -1,213 +1,232 @@
+/* ============================================
+   ELVRE HERO — Image Fit (No Green Background)
+   ============================================ */
+
+/* Hero section ka main wrapper */
 .hero-section {
-  height: 110vh;
   width: 100%;
   position: relative;
   overflow: hidden;
-  /* Premium gradient background - match karta hai ELVRE ke Green theme se */
-  background: radial-gradient(ellipse at center, #2E5A2E 0%, #1a2e1a 100%);
+  background: #f9f3e8;
+  padding-top: 50px; /* Desktop navbar se spacing */
 }
 
+/* Image aur floating text ka parent container */
 .image-slider {
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: relative;
   width: 100%;
-  height: 100%;
+  height: auto;
+  display: block;
 }
 
-.hero-slide{
-    position:absolute;
-    inset:0;
-}
-.image-slider::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
+/* Main product image */
+.hero-product-image {
   width: 100%;
-  height: 100%;
-  z-index: 1;
+  height: auto;
+  display: block;
+  margin: 0;
+  object-fit: contain;
   pointer-events: none;
 }
-.hero-product-image {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center bottom;
-  margin-top: 50px;
-  opacity: 1;
-}
 
-.product-highlight {
-  font-size: 1.5rem;
+/* ─── FLOATING TEXT BOXES ─── */
+.product-highlight,
+.hero-tagline,
+.hero-tagline1 {
   position: absolute;
-  top: 50%;
-  right: 6%;
-  padding: 8px 22px;
-  border-radius: 18px;
-  background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(8px);
-  color: #8b1804;
   z-index: 20;
-  animation: floatingText 3s ease-in-out infinite,
-             glowBorder 2.5s ease-in-out infinite;
-}
-.hero-tagline{
-  font-size: 1.5rem;
-  position:absolute;
-  top:20%;
-  left:13%;
-  background:rgba(255,255,255,0.05);
-  backdrop-filter:blur(8px);
-  padding:8px 22px;
-  border-radius:18px;
-  color:#8b1804;
-  z-index:20;
-  animation: floatingText 3s ease-in-out infinite,
-              glowBorder 2.5s ease-in-out infinite;
-}
-.hero-tagline1{
-  font-size:1.5rem;
-  position:absolute;
-  top:70%;
-  left:6.5%;
-  background:rgba(255,255,255,0.05);
-  backdrop-filter:blur(8px);
-  padding:8px 22px;
-  border-radius:18px;
-  color:#8b1804;
-  z-index:20;
-  animation: floatingText 3s ease-in-out infinite,
-              glowBorder 2.5s ease-in-out infinite;
+  color: #100907;
+  animation: floatingText 4s ease-in-out infinite;
 }
 
-.highlight-text1{
-  padding-left:20%;
-  line-height:1;
-}
-.tagline-title1{
-  padding-left:24%;
-  line-height:1;
-}
-.tagline-title3{
-  padding-left:34%;
-  line-height:1;
+.product-highlight h2,
+.hero-tagline h2,
+.hero-tagline1 h2 {
+  margin: 0;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  font-family: 'Fraunces', serif;
 }
 
+/* ─── TOP LEFT TEXT BLOCK ─── */
+.hero-tagline {
+  top: 12%;
+  left: 5%;
+  animation-delay: 0.2s;
+}
+.tagline-title {
+  font-size: clamp(0.7rem, 1.8vw + 0.3rem, 1.8rem);
+}
+.tagline-title1 {
+  font-size: clamp(0.95rem, 2.6vw + 0.4rem, 2.6rem);
+  padding-left: clamp(8px, 15%, 40px);
+  color: #f5e6d3;
+}
 
-@keyframes floatingText{
-  0%{
-    transform:translateY(0px);
+/* ─── BOTTOM LEFT TEXT BLOCK ─── */
+.hero-tagline1 {
+  bottom: 16%;
+  left: 5%;
+  animation-delay: 0.8s;
+}
+.tagline-title3 {
+  font-size: clamp(0.65rem, 1.6vw + 0.25rem, 1.6rem);
+  padding-left: clamp(4px, 8%, 20px);
+}
+.tagline-title2 {
+  font-size: clamp(0.8rem, 2vw + 0.3rem, 2rem);
+  color: #f5e6d3;
+}
+
+/* ─── RIGHT SIDE TEXT BLOCK ─── */
+.product-highlight {
+  top: 30%;
+  right: 5%;
+  animation-delay: 0.4s;
+  text-align: right;
+}
+.highlight-text {
+  font-size: clamp(0.7rem, 1.8vw + 0.3rem, 1.8rem);
+}
+.highlight-text1 {
+  font-size: clamp(1.05rem, 3vw + 0.4rem, 3rem);
+  padding-left: clamp(8px, 15%, 40px);
+  color: #f5e6d3;
+  line-height: 1.1;
+}
+
+/* ─── ANIMATIONS ─── */
+@keyframes floatingText {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-14px); }
+  100% { transform: translateY(0px); }
+}
+@keyframes glowBorder {
+  0% {
+    border-color: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
   }
-
-  50%{
-    transform:translateY(-12px);
+  50% {
+    border-color: rgba(212, 163, 115, 0.3);
+    box-shadow: 0 8px 40px rgba(212, 163, 115, 0.15);
   }
-
-  100%{
-    transform:translateY(0px);
+  100% {
+    border-color: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
   }
 }
 
-
-.hero-text span{
-  display:block;
-  margin-top:15px;
-  font-size:28px;
-}
-
-
+/* ─── ORDER NOW BUTTON ───
+   👉 SIZE CHHOTA KIYA: padding aur font-size dono kam kiye */
 .buy-now-btn {
   position: absolute;
-  bottom: 10%;
+  bottom: 8%;
   right: 6%;
-  background: #D4A373; /* Earthy Brown */
-  color: #1a2e1a;
-  padding: 12px 32px;
-  border: 2px solid transparent;
-  border-radius: 50px;
-  font-size: 1rem;
-  font-weight: 700;
-  cursor: pointer;
-  z-index: 3;
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  font-family: 'ProximaNovaRegular';
-  letter-spacing: 1px;
-  box-shadow: 0 8px 25px rgba(109, 76, 42, 0.3);
-}
-
-.buy-now-btn:hover {
-  background: #6D4C2A; 
+  background: #1f3d1f;
   color: #ffffff;
-  transform: translateY(-5px) scale(1.02);
-  box-shadow: 0 15px 40px rgba(109, 76, 42, 0.4);
-  border-color: #D4A373;
+  padding: 8px 20px;   /* pehle 12px 30px tha */
+  border: none;
+  border-radius: 8px;
+  font-size: clamp(0.75rem, 1vw, 0.9rem);   /* pehle clamp(0.85rem, 1.1vw, 1rem) tha */
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 25;
+  transition: all 0.3s ease;
+  letter-spacing: 0.5px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+.buy-now-btn:hover {
+  background: #345834;
+  transform: translateY(-4px);
 }
 
-/* Mobile Devices */
+/* ============================================
+   RESPONSIVE – MOBILE (max-width: 768px)
+   ============================================ */
 @media (max-width: 768px) {
-  .hero-text {
-    top: 12%;
-    right: 5%;
-    left: auto;
-    text-align: right;
-    max-width: 85%;
+  .hero-section {
+    padding-top: 90px;
   }
 
-  .hero-text h1 {
-    font-size: 1.2rem;
-    letter-spacing: 1px;
-  }
-
-  .hero-text h1 span {
-    font-size: 1rem;
-    margin-top: 4px;
-  }
-
+  /* 👉 Mobile pe button aur bhi chhota */
   .buy-now-btn {
-    bottom: 8%;
-    right: 5%;
-    padding: 10px 24px;
-    font-size: 0.85rem;
-    box-shadow: 0 6px 15px rgba(109, 76, 42, 0.25);
+    padding: 6px 16px;
+    font-size: 0.7rem;
   }
 }
 
-/* Tablets */
+/* ============================================
+   RESPONSIVE – SMALL MOBILE (<= 480px)
+   ============================================ */
+@media (max-width: 480px) {
+  .hero-section {
+    padding-top: 75px;
+  }
+
+  .product-highlight,
+  .hero-tagline,
+  .hero-tagline1 {
+    max-width: 48%;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+  .hero-tagline { top: 8%; }
+  .hero-tagline1 { bottom: 20%; }
+  .product-highlight { top: 26%; }
+
+  /* 👉 Bahut chhoti screens pe sabse chhota button */
+  .buy-now-btn {
+    bottom: 4%;
+    padding: 5px 14px;
+    font-size: 0.65rem;
+    min-width: unset;
+    text-align: center;
+  }
+}
+
+/* ============================================
+   RESPONSIVE – TABLETS (769px - 1024px)
+   ============================================ */
 @media (min-width: 769px) and (max-width: 1024px) {
-  .hero-text {
-    top: 12%;
-    right: 5%;
-  }
-
-  .hero-text h1 {
-    font-size: 2rem;
-  }
+  .hero-tagline { top: 16%; left: 5%; }
+  .hero-tagline1 { bottom: 25%; left: 5%; }
+  .product-highlight { top: 30%; right: 5%; }
 
   .buy-now-btn {
-    bottom: 8%;
-    padding: 10px 28px;
+    padding: 7px 18px;
+    font-size: 0.8rem;
   }
 }
 
-/* Large Desktops */
+/* ============================================
+   LARGE DESKTOPS (>= 1441px)
+   ============================================ */
 @media (min-width: 1441px) {
-  .hero-text {
-    top: 18%;
-    right: 8%;
-    max-width: 650px;
-  }
-
-  .hero-text h1 {
-    font-size: 3.5rem;
-  }
+  .hero-tagline { top: 20%; left: 8%; }
+  .hero-tagline1 { bottom: 28%; left: 8%; }
+  .product-highlight { top: 38%; right: 8%; }
 
   .buy-now-btn {
     bottom: 12%;
-    right: 8%;
-    padding: 18px 48px;
-    font-size: 1.2rem;
+    padding: 10px 26px;
+    font-size: 0.95rem;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY – REDUCED MOTION
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  .product-highlight,
+  .hero-tagline,
+  .hero-tagline1 {
+    animation: none !important;
+  }
+  .buy-now-btn {
+    transition: none !important;
+  }
+  .buy-now-btn:hover {
+    transform: translateX(-50%) !important;
   }
 }

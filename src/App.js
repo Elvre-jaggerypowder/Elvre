@@ -29,8 +29,7 @@ import UserSignup from "./components/UserSignup";
 import Checkout from "./components/Checkout";
 import OrderTracking from "./components/OrderTracking";
 
-// Admin Components
-import AdminLogin from "./components/AdminLogin";
+// Admin Component (only Dashboard, no Login)
 import AdminDashboard from "./components/AdminDashboard";
 
 // Context & Utils
@@ -89,12 +88,14 @@ function App() {
         <ContentProvider>
           <Router>
             <Routes>
-              {/* Admin Routes – No Layout */}
-              <Route path="/admin" element={<AdminLogin />} />
+              {/* ✅ Admin Routes – Only Dashboard (login handled by UserLogin) */}
               <Route path="/admin-dashboard" element={<AdminDashboard />} />
 
               {/* Auth Callback – No Layout (redirects to login/home) */}
               <Route path="/auth/callback" element={<AuthCallback />} />
+
+              {/* ✅ Redirect /admin to /login (since AdminLogin removed) */}
+              <Route path="/admin" element={<Navigate to="/login" replace />} />
 
               {/* Public Routes – with Layout */}
               <Route

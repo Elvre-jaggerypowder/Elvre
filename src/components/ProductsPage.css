@@ -499,18 +499,25 @@
 .product-hero {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3.3;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
-  background: #223022;
+  background: #f6f1ea;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
   flex-shrink: 0;
 }
 
 .hero-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
   display: block;
   transition: transform 0.5s ease;
+  filter: drop-shadow(0 4px 12px rgba(31, 59, 44, 0.08));
 }
 
 .product-card:hover .hero-img {

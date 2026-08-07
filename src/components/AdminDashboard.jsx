@@ -21,6 +21,11 @@ const AdminDashboard = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
   
+  // ─── IMAGE UPLOAD STATES ───
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [uploading, setUploading] = useState(false);
+  
   // ─── CONTACT INFO ───
   const [contactInfo, setContactInfo] = useState({
     phone1: "+91 7060998050",
@@ -58,11 +63,11 @@ const AdminDashboard = () => {
     variants: []
   });
 
-  // ─── AUTH CHECK ───
+  // ─── AUTH CHECK (FIXED) ───
   useEffect(() => {
     const isAdmin = localStorage.getItem("adminLoggedIn");
     if (!isAdmin) {
-      navigate("/admin");
+      navigate("/login");
     }
   }, [navigate]);
 
@@ -91,14 +96,40 @@ const AdminDashboard = () => {
     }
   };
 
-  // ─── SHOW MESSAGE (improved) ───
   const showMessage = (text, type = "success") => {
     setMessage(text);
     setMessageType(type);
     setTimeout(() => {
       setMessage("");
       setMessageType("success");
-    }, 4000);
+    }, 5000);
+  };
+
+  // ─── IMAGE UPLOAD ───
+  const uploadImage = async (file) => {
+    if (!file) return null;
+    setUploading(true);
+    try {
+      const cleanName = file.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._-]/g, '');
+      const fileName = `${Date.now()}_${cleanName}`;
+      const { data, error } = await supabase.storage
+        .from('products')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage
+        .from('products')
+        .getPublicUrl(fileName);
+      return urlData.publicUrl;
+    } catch (err) {
+      console.error('Upload error:', err);
+      showMessage("Image upload failed: " + err.message, "error");
+      return null;
+    } finally {
+      setUploading(false);
+    }
   };
 
   // ─── LOAD PRODUCTS ───
@@ -108,9 +139,7 @@ const AdminDashboard = () => {
         .from('products')
         .select('*')
         .order('id', { ascending: true });
-      
       if (error) throw error;
-      
       if (data && data.length > 0) {
         const formatted = data.map(p => ({
           id: p.id,
@@ -143,7 +172,6 @@ const AdminDashboard = () => {
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      
       if (data && data.length > 0) {
         const formatted = data.map(order => ({
           id: order.id,
@@ -172,21 +200,20 @@ const AdminDashboard = () => {
     }
   };
 
-  // ─── LOAD USERS ───
+  // ─── LOAD USERS (CUSTOMERS) ───
   const loadUsers = async () => {
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('*')
+        .select('id, name, email, phone, created_at')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      
       if (data && data.length > 0) {
         const formatted = data.map(user => ({
           id: user.id,
-          name: user.name,
+          name: user.name || 'User',
           email: user.email,
-          phone: user.phone || '',
+          phone: user.phone || 'Not provided',
           createdAt: user.created_at,
           orders: orders.filter(o => o.email === user.email).length
         }));
@@ -195,8 +222,8 @@ const AdminDashboard = () => {
         setUsers([]);
       }
     } catch (err) {
-      console.error('Error loading users:', err);
-      showMessage("Failed to load users: " + err.message, "error");
+      console.error('❌ Error loading users:', err);
+      setUsers([]);
     }
   };
 
@@ -208,7 +235,6 @@ const AdminDashboard = () => {
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      
       if (data && data.length > 0) {
         setFeedbacks(data);
       } else {
@@ -228,7 +254,6 @@ const AdminDashboard = () => {
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      
       if (data && data.length > 0) {
         setCoupons(data);
       } else {
@@ -248,7 +273,6 @@ const AdminDashboard = () => {
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      
       if (data && data.length > 0) {
         const formatted = data.map(review => ({
           ...review,
@@ -265,65 +289,68 @@ const AdminDashboard = () => {
     }
   };
 
-  // ─── CONTACT INFO (Supabase se) ───
+  // ─── CONTACT INFO ───
   const loadContactInfo = async () => {
     try {
       const { data, error } = await supabase
         .from('contact_info')
         .select('*')
         .limit(1);
-      
-      if (error) throw error;
-      
+      if (error && error.code !== 'PGRST116') throw error;
       if (data && data.length > 0) {
         const info = data[0];
         setContactInfo({
-          phone1: info.phone1,
-          phone2: info.phone2,
-          email: info.email,
-          address: info.address
+          phone1: info.phone1 || "+91 7060998050",
+          phone2: info.phone2 || "+91 7906396629",
+          email: info.email || "elvreofficals@gmail.com",
+          address: info.address || "1st Floor, Sangam Tent House, Jawalapur, Haridwar, Uttrakhand, 249407"
         });
         setContactFormData({
-          phone1: info.phone1,
-          phone2: info.phone2,
-          email: info.email,
-          address: info.address
+          phone1: info.phone1 || "",
+          phone2: info.phone2 || "",
+          email: info.email || "",
+          address: info.address || ""
         });
-      } else {
-        // Default data agar table khali ho
-        const defaultInfo = {
-          phone1: "+91 7060998050",
-          phone2: "+91 7906396629",
-          email: "elvreofficals@gmail.com",
-          address: "1st Floor, Sangam Tent House, Jawalapur, Haridwar, Uttrakhand, 249407"
-        };
-        setContactInfo(defaultInfo);
-        setContactFormData(defaultInfo);
       }
     } catch (err) {
       console.error('Error loading contact info:', err);
     }
   };
 
-  // ─── SAVE CONTACT INFO ───
+  // ─── SAVE CONTACT INFO (UPSERT) ───
   const saveContactInfo = async () => {
     if (!contactFormData.phone1 || !contactFormData.email || !contactFormData.address) {
       showMessage("Please fill all required fields", "error");
       return;
     }
-
     try {
-      const { error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from('contact_info')
-        .update({
-          phone1: contactFormData.phone1,
-          phone2: contactFormData.phone2,
-          email: contactFormData.email,
-          address: contactFormData.address,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', 1);
+        .select('id')
+        .limit(1);
+      if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
 
+      const payload = {
+        phone1: contactFormData.phone1,
+        phone2: contactFormData.phone2,
+        email: contactFormData.email,
+        address: contactFormData.address,
+        updated_at: new Date().toISOString()
+      };
+
+      let error;
+      if (data && data.length > 0) {
+        const { error: updateError } = await supabase
+          .from('contact_info')
+          .update(payload)
+          .eq('id', data[0].id);
+        error = updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('contact_info')
+          .insert([{ ...payload, id: 1 }]);
+        error = insertError;
+      }
       if (error) throw error;
 
       setContactInfo(contactFormData);
@@ -343,7 +370,6 @@ const AdminDashboard = () => {
         .update({ status: newStatus })
         .eq('id', orderId);
       if (error) throw error;
-
       const updatedOrders = orders.map(order =>
         order.id === orderId ? { ...order, status: newStatus } : order
       );
@@ -363,7 +389,6 @@ const AdminDashboard = () => {
         .update({ payment_status: newPaymentStatus })
         .eq('id', orderId);
       if (error) throw error;
-
       const updatedOrders = orders.map(order =>
         order.id === orderId ? { ...order, paymentStatus: newPaymentStatus } : order
       );
@@ -376,42 +401,12 @@ const AdminDashboard = () => {
   };
 
   // ─── PRODUCT CRUD ───
-  const handleAddProduct = async () => {
-    if (!formData.name || !formData.priceValue || !formData.stock) {
-      showMessage("Please fill all required fields", "error");
-      return;
-    }
-
-    const newProduct = {
-      id: Date.now(),
-      name: formData.name,
-      description: formData.description || "Pure & Natural",
-      price: parseFloat(formData.priceValue),
-      stock: parseInt(formData.stock),
-      image: formData.image || "/assets/jaggery.png",
-      category: formData.category,
-      badge: "New",
-      sold_count: 0,
-      variants: formData.variants.filter(v => v.label && v.price),
-      created_at: new Date().toISOString()
-    };
-
-    try {
-      const { error } = await supabase
-        .from('products')
-        .insert([newProduct]);
-      
-      if (error) throw error;
-      
-      const formattedProduct = { ...newProduct, price: `₹${newProduct.price}` };
-      setProducts([...products, formattedProduct]);
-      setFormData({ name: "", description: "", priceValue: "", stock: "", image: "", category: "jaggery", variants: [] });
-      setShowAddForm(false);
-      showMessage("Product added successfully!", "success");
-    } catch (err) {
-      console.error('❌ Error adding product:', err);
-      showMessage("Failed to add product: " + err.message, "error");
-    }
+  const resetForm = () => {
+    setFormData({ name: "", description: "", priceValue: "", stock: "", image: "", category: "jaggery", variants: [] });
+    setImageFile(null);
+    setImagePreview("");
+    setEditingProduct(null);
+    setShowAddForm(false);
   };
 
   const handleEditProduct = (product) => {
@@ -425,21 +420,70 @@ const AdminDashboard = () => {
       category: product.category || "jaggery",
       variants: product.variants ? [...product.variants] : []
     });
+    setImagePreview(product.image || "");
+    setImageFile(null);
     setShowAddForm(true);
   };
 
+  const handleAddProduct = async () => {
+    if (!formData.name || !formData.priceValue || !formData.stock) {
+      showMessage("Please fill all required fields", "error");
+      return;
+    }
+    let imageUrl = "/assets/jaggery.png";
+    if (imageFile) {
+      const uploaded = await uploadImage(imageFile);
+      if (uploaded) imageUrl = uploaded;
+      else return;
+    }
+    const newProduct = {
+      id: Date.now(),
+      name: formData.name,
+      description: formData.description || "Pure & Natural",
+      price: parseFloat(formData.priceValue),
+      stock: parseInt(formData.stock),
+      image: imageUrl,
+      category: formData.category,
+      badge: "New",
+      sold_count: 0,
+      variants: formData.variants.filter(v => v.label && v.price),
+      created_at: new Date().toISOString()
+    };
+    try {
+      const { error } = await supabase.from('products').insert([newProduct]);
+      if (error) throw error;
+      const formattedProduct = { ...newProduct, price: `₹${newProduct.price}` };
+      setProducts([...products, formattedProduct]);
+      resetForm();
+      showMessage("Product added successfully!", "success");
+    } catch (err) {
+      console.error('❌ Error adding product:', err);
+      showMessage("Failed to add product: " + err.message, "error");
+    }
+  };
+
   const handleUpdateProduct = async () => {
+    if (!formData.name || !formData.priceValue || !formData.stock) {
+      showMessage("Please fill all required fields", "error");
+      return;
+    }
+    let imageUrl = editingProduct.image || "/assets/jaggery.png";
+    if (imageFile) {
+      const uploaded = await uploadImage(imageFile);
+      if (uploaded) imageUrl = uploaded;
+      else return;
+    }
     const updatedProduct = {
       ...editingProduct,
       name: formData.name,
       description: formData.description,
       price: parseFloat(formData.priceValue),
       stock: parseInt(formData.stock),
-      image: formData.image || editingProduct.image,
+      image: imageUrl,
       category: formData.category,
-      variants: formData.variants.filter(v => v.label && v.price)
+      variants: formData.variants.filter(v => v.label && v.price),
+      badge: editingProduct.badge || "New"
     };
-
     try {
       const { error } = await supabase
         .from('products')
@@ -454,16 +498,12 @@ const AdminDashboard = () => {
           variants: updatedProduct.variants
         })
         .eq('id', editingProduct.id);
-      
       if (error) throw error;
-
       const updatedProducts = products.map(p =>
         p.id === editingProduct.id ? { ...updatedProduct, price: `₹${updatedProduct.price}` } : p
       );
       setProducts(updatedProducts);
-      setEditingProduct(null);
-      setShowAddForm(false);
-      setFormData({ name: "", description: "", priceValue: "", stock: "", image: "", category: "jaggery", variants: [] });
+      resetForm();
       showMessage("Product updated successfully!", "success");
     } catch (err) {
       console.error('❌ Error updating product:', err);
@@ -473,15 +513,9 @@ const AdminDashboard = () => {
 
   const handleDeleteProduct = async (id) => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
-
     try {
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', id);
-      
+      const { error } = await supabase.from('products').delete().eq('id', id);
       if (error) throw error;
-
       const updatedProducts = products.filter(p => p.id !== id);
       setProducts(updatedProducts);
       showMessage("Product deleted successfully!", "success");
@@ -498,12 +532,10 @@ const AdminDashboard = () => {
       variants: [...formData.variants, { label: "", price: "", stock: "" }]
     });
   };
-
   const removeVariantRow = (index) => {
     const newVariants = formData.variants.filter((_, i) => i !== index);
     setFormData({ ...formData, variants: newVariants });
   };
-
   const handleVariantChange = (index, field, value) => {
     const newVariants = [...formData.variants];
     newVariants[index][field] = value;
@@ -520,7 +552,6 @@ const AdminDashboard = () => {
       showMessage("Coupon code already exists!", "error");
       return;
     }
-
     const coupon = {
       id: Date.now(),
       code: newCoupon.code.toUpperCase(),
@@ -534,14 +565,9 @@ const AdminDashboard = () => {
       active: true,
       created_at: new Date().toISOString()
     };
-
     try {
-      const { error } = await supabase
-        .from('coupons')
-        .insert([coupon]);
-      
+      const { error } = await supabase.from('coupons').insert([coupon]);
       if (error) throw error;
-
       setCoupons([...coupons, coupon]);
       setNewCoupon({ code: "", discount: "", type: "percentage", expiryDate: "", minOrder: 0, maxDiscount: 0, usageLimit: 0 });
       showMessage("Coupon created successfully!", "success");
@@ -554,15 +580,12 @@ const AdminDashboard = () => {
   const toggleCouponStatus = async (couponId) => {
     const coupon = coupons.find(c => c.id === couponId);
     const newStatus = !coupon.active;
-
     try {
       const { error } = await supabase
         .from('coupons')
         .update({ active: newStatus })
         .eq('id', couponId);
-      
       if (error) throw error;
-
       const updatedCoupons = coupons.map(c =>
         c.id === couponId ? { ...c, active: newStatus } : c
       );
@@ -576,15 +599,9 @@ const AdminDashboard = () => {
 
   const deleteCoupon = async (couponId) => {
     if (!window.confirm("Delete this coupon?")) return;
-
     try {
-      const { error } = await supabase
-        .from('coupons')
-        .delete()
-        .eq('id', couponId);
-      
+      const { error } = await supabase.from('coupons').delete().eq('id', couponId);
       if (error) throw error;
-
       const updatedCoupons = coupons.filter(c => c.id !== couponId);
       setCoupons(updatedCoupons);
       showMessage("Coupon deleted!", "success");
@@ -595,15 +612,13 @@ const AdminDashboard = () => {
   };
 
   // ─── REVIEW MANAGEMENT ───
-  const approveReview = async (reviewId, productId) => {
+  const approveReview = async (reviewId) => {
     try {
       const { error } = await supabase
         .from('reviews')
         .update({ approved: true, spam: false })
         .eq('id', reviewId);
-      
       if (error) throw error;
-
       const updatedReviews = allReviews.map(r =>
         r.id === reviewId ? { ...r, approved: true, spam: false } : r
       );
@@ -615,17 +630,11 @@ const AdminDashboard = () => {
     }
   };
 
-  const deleteReview = async (reviewId, productId) => {
+  const deleteReview = async (reviewId) => {
     if (!window.confirm("Delete this review permanently?")) return;
-
     try {
-      const { error } = await supabase
-        .from('reviews')
-        .delete()
-        .eq('id', reviewId);
-      
+      const { error } = await supabase.from('reviews').delete().eq('id', reviewId);
       if (error) throw error;
-
       const updatedReviews = allReviews.filter(r => r.id !== reviewId);
       setAllReviews(updatedReviews);
       showMessage("Review deleted!", "success");
@@ -635,15 +644,13 @@ const AdminDashboard = () => {
     }
   };
 
-  const markAsSpam = async (reviewId, productId) => {
+  const markAsSpam = async (reviewId) => {
     try {
       const { error } = await supabase
         .from('reviews')
         .update({ spam: true, approved: false })
         .eq('id', reviewId);
-      
       if (error) throw error;
-
       const updatedReviews = allReviews.map(r =>
         r.id === reviewId ? { ...r, spam: true, approved: false } : r
       );
@@ -657,7 +664,7 @@ const AdminDashboard = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("adminLoggedIn");
-    localStorage.removeItem("currentUser");
+    localStorage.removeItem("adminEmail");
     window.location.href = "/";
   };
 
@@ -673,15 +680,14 @@ const AdminDashboard = () => {
   const totalFeedbacks = feedbacks.length;
   const pendingPayments = orders.filter(o => o.paymentStatus === "pending").length;
   const pendingRefunds = orders.filter(o => o.status === "cancelled" && o.paymentStatus !== "refunded").length;
-  
   const recentOrders = orders.slice(0, 5);
   const topProducts = [...products].sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0)).slice(0, 5);
 
-  // ─── RENDER ───
   if (loading) {
     return <div className="admin-loading">Loading Dashboard...</div>;
   }
 
+  // ─── RENDER ───
   return (
     <div className="admin-dashboard">
       <div className="admin-header">
@@ -754,27 +760,21 @@ const AdminDashboard = () => {
                 </table>
               </div>
             </div>
-
             <div className="dashboard-section">
               <h3>Top Selling Products</h3>
               <div className="top-products-grid">
-                {topProducts.length === 0 ? (
-                  <p>No products yet</p>
-                ) : (
-                  topProducts.map(product => (
-                    <div key={product.id} className="top-product-card">
-                      <img src={product.image} alt={product.name} />
-                      <div className="top-product-info">
-                        <h4>{product.name}</h4>
-                        <p>Sold: {product.soldCount || 0} units</p>
-                        <p>Revenue: ₹{((product.priceValue || 0) * (product.soldCount || 0)).toLocaleString()}</p>
-                      </div>
+                {topProducts.length === 0 ? <p>No products yet</p> : topProducts.map(product => (
+                  <div key={product.id} className="top-product-card">
+                    <img src={product.image} alt={product.name} />
+                    <div className="top-product-info">
+                      <h4>{product.name}</h4>
+                      <p>Sold: {product.soldCount || 0} units</p>
+                      <p>Revenue: ₹{((product.priceValue || 0) * (product.soldCount || 0)).toLocaleString()}</p>
                     </div>
-                  ))
-                )}
+                  </div>
+                ))}
               </div>
             </div>
-
             <div className="quick-actions">
               <h3>Quick Actions</h3>
               <div className="action-buttons">
@@ -790,7 +790,7 @@ const AdminDashboard = () => {
         {activeTab === "products" && (
           <>
             <div className="admin-actions">
-              <button onClick={() => { setShowAddForm(!showAddForm); setEditingProduct(null); }} className="admin-add-btn">+ Add New Product</button>
+              <button onClick={() => { resetForm(); setShowAddForm(true); }} className="admin-add-btn">+ Add New Product</button>
             </div>
             {showAddForm && (
               <div className="admin-product-form">
@@ -801,9 +801,13 @@ const AdminDashboard = () => {
                   <div className="admin-field"><label>Price (₹) *</label><input type="number" value={formData.priceValue} onChange={(e) => setFormData({...formData, priceValue: e.target.value})} placeholder="Price" /></div>
                   <div className="admin-field"><label>Stock *</label><input type="number" value={formData.stock} onChange={(e) => setFormData({...formData, stock: e.target.value})} placeholder="Stock" /></div>
                   <div className="admin-field"><label>Category</label><select value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})}><option value="jaggery">Jaggery</option><option value="organic">Organic</option><option value="special">Special</option></select></div>
-                  <div className="admin-field"><label>Image Path</label><input type="text" value={formData.image} onChange={(e) => setFormData({...formData, image: e.target.value})} placeholder="/assets/image.png" /></div>
-                  
-                  {/* VARIANTS SECTION */}
+                  <div className="admin-field">
+                    <label>Product Image</label>
+                    <input type="file" accept="image/*" onChange={(e) => { const file = e.target.files[0]; if (file) { setImageFile(file); setImagePreview(URL.createObjectURL(file)); } }} />
+                    {imagePreview && <div style={{ marginTop: '8px' }}><img src={imagePreview} alt="Preview" style={{ maxWidth: '100px', borderRadius: '8px' }} /><p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>Preview</p></div>}
+                    {editingProduct && !imageFile && editingProduct.image && <div style={{ marginTop: '8px' }}><img src={editingProduct.image} alt="Current" style={{ maxWidth: '80px', borderRadius: '8px' }} /><p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>Current image</p></div>}
+                    {uploading && <p style={{ color: '#8B5E3C', marginTop: '4px' }}>⏳ Uploading...</p>}
+                  </div>
                   <div className="admin-field full-width">
                     <label>Product Variants (Weight/Size)</label>
                     {formData.variants && formData.variants.map((variant, index) => (
@@ -818,8 +822,10 @@ const AdminDashboard = () => {
                   </div>
                 </div>
                 <div className="admin-form-buttons">
-                  <button onClick={editingProduct ? handleUpdateProduct : handleAddProduct} className="admin-save-btn">{editingProduct ? "Update" : "Save"}</button>
-                  <button onClick={() => { setShowAddForm(false); setEditingProduct(null); }} className="admin-cancel-btn">Cancel</button>
+                  <button onClick={editingProduct ? handleUpdateProduct : handleAddProduct} className="admin-save-btn" disabled={uploading}>
+                    {uploading ? "Uploading..." : (editingProduct ? "Update" : "Save")}
+                  </button>
+                  <button onClick={resetForm} className="admin-cancel-btn">Cancel</button>
                 </div>
               </div>
             )}
@@ -829,22 +835,18 @@ const AdminDashboard = () => {
                 <table className="admin-table">
                   <thead><tr><th>Image</th><th>Product</th><th>Price</th><th>Stock</th><th>Sold</th><th>Revenue</th><th>Variants</th><th>Actions</th></tr></thead>
                   <tbody>
-                    {products.length === 0 ? (
-                      <tr><td colSpan="8" className="no-data">No products yet</td></tr>
-                    ) : (
-                      products.map(product => (
-                        <tr key={product.id}>
-                          <td><img src={product.image} alt={product.name} className="admin-product-img" /></td>
-                          <td><strong>{product.name}</strong><br /><small>{product.description}</small></td>
-                          <td>{product.price}</td>
-                          <td><span className={product.stock > 0 ? "stock-badge in-stock" : "stock-badge out-of-stock"}>{product.stock} units</span></td>
-                          <td>{product.soldCount || 0}</td>
-                          <td>₹{((product.priceValue || 0) * (product.soldCount || 0)).toLocaleString()}</td>
-                          <td>{product.variants && product.variants.length > 0 ? product.variants.map(v => v.label).join(', ') : 'None'}</td>
-                          <td><button onClick={() => handleEditProduct(product)} className="admin-edit-btn">Edit</button><button onClick={() => handleDeleteProduct(product.id)} className="admin-delete-btn">Delete</button></td>
-                        </tr>
-                      ))
-                    )}
+                    {products.map(product => (
+                      <tr key={product.id}>
+                        <td><img src={product.image} alt={product.name} className="admin-product-img" /></td>
+                        <td><strong>{product.name}</strong><br /><small>{product.description}</small></td>
+                        <td>{product.price}</td>
+                        <td><span className={product.stock > 0 ? "stock-badge in-stock" : "stock-badge out-of-stock"}>{product.stock} units</span></td>
+                        <td>{product.soldCount || 0}</td>
+                        <td>₹{((product.priceValue || 0) * (product.soldCount || 0)).toLocaleString()}</td>
+                        <td>{product.variants && product.variants.length > 0 ? product.variants.map(v => v.label).join(', ') : 'None'}</td>
+                        <td><button onClick={() => handleEditProduct(product)} className="admin-edit-btn">Edit</button><button onClick={() => handleDeleteProduct(product.id)} className="admin-delete-btn">Delete</button></td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
@@ -857,24 +859,19 @@ const AdminDashboard = () => {
             <h3>All Orders ({orders.length})</h3>
             <div className="table-responsive">
               <table className="admin-table orders-table">
-                <thead><tr><th>Order ID</th><th>Customer Details</th><th>Products</th><th>Amount</th><th>Status</th><th>Payment Status</th><th>Date</th><th>Action</th></tr></thead>
+                <thead><tr><th>Order ID</th><th>Customer</th><th>Amount</th><th>Status</th><th>Payment</th><th>Date</th><th>Action</th></tr></thead>
                 <tbody>
-                  {orders.length === 0 ? (
-                    <tr><td colSpan="8" className="no-data">No orders yet</td></tr>
-                  ) : (
-                    orders.map(order => (
-                      <tr key={order.id}>
-                        <td><strong>{order.id}</strong></td>
-                        <td><div><strong>{order.customer}</strong></div><div className="customer-email">{order.email}</div></td>
-                        <td><div className="order-products-list">{order.products && order.products.map((p, idx) => (<div key={idx} className="order-product-item-compact"><span className="product-name">{p.name}</span><span className="product-qty">x{p.quantity}</span><span className="product-price">₹{p.price * p.quantity}</span></div>))}</div></td>
-                        <td><strong>₹{order.total}</strong></td>
-                        <td><select value={order.status} onChange={(e) => updateOrderStatus(order.id, e.target.value)} className={`status-select status-${order.status}`}><option value="pending">Pending</option><option value="processing">Processing</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option></select></td>
-                        <td><select value={order.paymentStatus || "pending"} onChange={(e) => updatePaymentStatus(order.id, e.target.value)} className="payment-select"><option value="pending">Pending</option><option value="paid">Paid</option><option value="failed">Failed</option><option value="refunded">Refunded</option></select></td>
-                        <td>{order.orderDate}</td>
-                        <td><button className="view-btn" onClick={() => { setSelectedOrder(order); setShowOrderModal(true); }}>View Details</button></td>
-                      </tr>
-                    ))
-                  )}
+                  {orders.map(order => (
+                    <tr key={order.id}>
+                      <td>{order.id}</td>
+                      <td>{order.customer}</td>
+                      <td>₹{order.total}</td>
+                      <td><select value={order.status} onChange={(e) => updateOrderStatus(order.id, e.target.value)} className={`status-select status-${order.status}`}><option value="pending">Pending</option><option value="processing">Processing</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option></select></td>
+                      <td><select value={order.paymentStatus || "pending"} onChange={(e) => updatePaymentStatus(order.id, e.target.value)} className="payment-select"><option value="pending">Pending</option><option value="paid">Paid</option><option value="failed">Failed</option><option value="refunded">Refunded</option></select></td>
+                      <td>{order.orderDate}</td>
+                      <td><button className="view-btn" onClick={() => { setSelectedOrder(order); setShowOrderModal(true); }}>View</button></td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -893,20 +890,16 @@ const AdminDashboard = () => {
               <table className="admin-table">
                 <thead><tr><th>Order ID</th><th>Customer</th><th>Amount</th><th>Payment Method</th><th>Payment Status</th><th>Action</th></tr></thead>
                 <tbody>
-                  {orders.filter(o => o.paymentStatus !== "paid").length === 0 ? (
-                    <tr><td colSpan="6" className="no-data">All payments are settled</td></tr>
-                  ) : (
-                    orders.filter(o => o.paymentStatus !== "paid").map(order => (
-                      <tr key={order.id}>
-                        <td>{order.id}</td>
-                        <td>{order.customer}</td>
-                        <td>₹{order.total}</td>
-                        <td>{order.paymentMethod}</td>
-                        <td><span className={`payment-badge ${order.paymentStatus === "paid" ? "paid" : "pending"}`}>{order.paymentStatus || "pending"}</span></td>
-                        <td><button className="mark-paid-btn" onClick={() => updatePaymentStatus(order.id, "paid")}>Mark as Paid</button><button className="refund-btn" onClick={() => updatePaymentStatus(order.id, "refunded")}>Refund</button></td>
-                      </tr>
-                    ))
-                  )}
+                  {orders.filter(o => o.paymentStatus !== "paid").map(order => (
+                    <tr key={order.id}>
+                      <td>{order.id}</td>
+                      <td>{order.customer}</td>
+                      <td>₹{order.total}</td>
+                      <td>{order.paymentMethod}</td>
+                      <td><span className={`payment-badge ${order.paymentStatus === "paid" ? "paid" : "pending"}`}>{order.paymentStatus || "pending"}</span></td>
+                      <td><button className="mark-paid-btn" onClick={() => updatePaymentStatus(order.id, "paid")}>Mark as Paid</button><button className="refund-btn" onClick={() => updatePaymentStatus(order.id, "refunded")}>Refund</button></td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -935,22 +928,18 @@ const AdminDashboard = () => {
                 <table className="admin-table">
                   <thead><tr><th>Code</th><th>Discount</th><th>Min Order</th><th>Expiry Date</th><th>Used</th><th>Status</th><th>Actions</th></tr></thead>
                   <tbody>
-                    {coupons.length === 0 ? (
-                      <tr><td colSpan="7" className="no-data">No coupons created yet</td></tr>
-                    ) : (
-                      coupons.map(coupon => (
-                        <tr key={coupon.id} className={!coupon.active ? "inactive-coupon" : ""}>
-                          <td><strong>{coupon.code}</strong></td>
-                          <td>{coupon.discount}{coupon.type === "percentage" ? "%" : "₹"}</td>
-                          <td>₹{coupon.min_order || 0}</td>
-                          <td className={isExpired(coupon.expiry_date) ? "expired" : ""}>{coupon.expiry_date}{isExpired(coupon.expiry_date) && " (Expired)"}</td>
-                          <td>{coupon.used_count} / {coupon.usage_limit || "∞"}</td>
-                          <td><span className={`coupon-status ${coupon.active ? "active" : "inactive"}`}>{coupon.active ? "Active" : "Inactive"}</span></td>
-                          <td><button className="toggle-status-btn" onClick={() => toggleCouponStatus(coupon.id)}>{coupon.active ? "Deactivate" : "Activate"}</button>
-                          <button className="delete-coupon-btn" onClick={() => deleteCoupon(coupon.id)}>Delete</button></td>
-                        </tr>
-                      ))
-                    )}
+                    {coupons.map(coupon => (
+                      <tr key={coupon.id} className={!coupon.active ? "inactive-coupon" : ""}>
+                        <td><strong>{coupon.code}</strong></td>
+                        <td>{coupon.discount}{coupon.type === "percentage" ? "%" : "₹"}</td>
+                        <td>₹{coupon.min_order || 0}</td>
+                        <td className={isExpired(coupon.expiry_date) ? "expired" : ""}>{coupon.expiry_date}{isExpired(coupon.expiry_date) && " (Expired)"}</td>
+                        <td>{coupon.used_count} / {coupon.usage_limit || "∞"}</td>
+                        <td><span className={`coupon-status ${coupon.active ? "active" : "inactive"}`}>{coupon.active ? "Active" : "Inactive"}</span></td>
+                        <td><button className="toggle-status-btn" onClick={() => toggleCouponStatus(coupon.id)}>{coupon.active ? "Deactivate" : "Activate"}</button>
+                        <button className="delete-coupon-btn" onClick={() => deleteCoupon(coupon.id)}>Delete</button></td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
@@ -967,17 +956,13 @@ const AdminDashboard = () => {
               <div className="stat-box"><span className="stat-number">{allReviews.filter(r => r.rating <= 2).length}</span><span className="stat-label">Negative (1-2⭐)</span></div>
             </div>
             <div className="reviews-list">
-              {allReviews.length === 0 ? (
-                <div className="no-reviews">No reviews yet</div>
-              ) : (
-                allReviews.map((review, idx) => (
-                  <div key={idx} className="review-item">
-                    <div className="review-product-info"><img src={review.productImage || "/assets/jaggery.png"} alt={review.productName} /><div><h4>{review.productName}</h4><p>Product ID: {review.productId}</p></div></div>
-                    <div className="review-content"><div className="reviewer-info"><strong>{review.name}</strong><div className="review-stars">{"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}</div><span className="review-date">{review.date}</span>{review.verified && <span className="verified-badge">✓ Verified</span>}{review.spam && <span className="spam-badge">⚠️ Spam</span>}</div><p className="review-comment">{review.comment}</p></div>
-                    <div className="review-actions">{!review.approved && !review.spam && <button className="approve-btn" onClick={() => approveReview(review.id, review.productId)}>✓ Approve</button>}<button className="spam-btn" onClick={() => markAsSpam(review.id, review.productId)}>🚫 Mark Spam</button><button className="delete-btn" onClick={() => deleteReview(review.id, review.productId)}>🗑️ Delete</button></div>
-                  </div>
-                ))
-              )}
+              {allReviews.map((review, idx) => (
+                <div key={idx} className="review-item">
+                  <div className="review-product-info"><img src={review.productImage || "/assets/jaggery.png"} alt={review.productName} /><div><h4>{review.productName}</h4><p>Product ID: {review.productId}</p></div></div>
+                  <div className="review-content"><div className="reviewer-info"><strong>{review.name}</strong><div className="review-stars">{"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}</div><span className="review-date">{review.date}</span>{review.verified && <span className="verified-badge">✓ Verified</span>}{review.spam && <span className="spam-badge">⚠️ Spam</span>}</div><p className="review-comment">{review.comment}</p></div>
+                  <div className="review-actions">{!review.approved && !review.spam && <button className="approve-btn" onClick={() => approveReview(review.id)}>✓ Approve</button>}<button className="spam-btn" onClick={() => markAsSpam(review.id)}>🚫 Mark Spam</button><button className="delete-btn" onClick={() => deleteReview(review.id)}>🗑️ Delete</button></div>
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -989,20 +974,16 @@ const AdminDashboard = () => {
               <table className="admin-table">
                 <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Registered Date</th><th>Orders</th></tr></thead>
                 <tbody>
-                  {users.length === 0 ? (
-                    <tr><td colSpan="6" className="no-data">No customers registered yet</td></tr>
-                  ) : (
-                    users.map(user => (
-                      <tr key={user.id}>
-                        <td>{user.id}</td>
-                        <td>{user.name}</td>
-                        <td>{user.email}</td>
-                        <td>{user.phone || 'Not provided'}</td>
-                        <td>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</td>
-                        <td>{orders.filter(o => o.email === user.email).length}</td>
-                      </tr>
-                    ))
-                  )}
+                  {users.map(user => (
+                    <tr key={user.id}>
+                      <td>{user.id}</td>
+                      <td>{user.name}</td>
+                      <td>{user.email}</td>
+                      <td>{user.phone || 'Not provided'}</td>
+                      <td>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</td>
+                      <td>{orders.filter(o => o.email === user.email).length}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -1016,19 +997,15 @@ const AdminDashboard = () => {
               <table className="admin-table">
                 <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Message</th><th>Date</th></tr></thead>
                 <tbody>
-                  {feedbacks.length === 0 ? (
-                    <tr><td colSpan="5" className="no-data">No feedbacks yet</td></tr>
-                  ) : (
-                    feedbacks.map((fb, idx) => (
-                      <tr key={fb.id || idx}>
-                        <td>{idx + 1}</td>
-                        <td>{fb.name}</td>
-                        <td>{fb.email}</td>
-                        <td>{fb.message}</td>
-                        <td>{fb.date || (fb.created_at ? new Date(fb.created_at).toLocaleDateString() : 'N/A')}</td>
-                      </tr>
-                    ))
-                  )}
+                  {feedbacks.map((fb, idx) => (
+                    <tr key={fb.id || idx}>
+                      <td>{idx + 1}</td>
+                      <td>{fb.name}</td>
+                      <td>{fb.email}</td>
+                      <td>{fb.message}</td>
+                      <td>{fb.date || (fb.created_at ? new Date(fb.created_at).toLocaleDateString() : 'N/A')}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -1039,69 +1016,32 @@ const AdminDashboard = () => {
           <div className="admin-contact-section">
             <h3>📞 Contact Information Management</h3>
             <p className="section-subtitle">Update contact details that appear on the website</p>
-            
             {!editContactMode ? (
-              <>
-                <div className="contact-info-display">
-                  <div className="contact-info-card">
-                    <div className="contact-info-item">
-                      <span className="contact-label">📞 Phone 1</span>
-                      <span className="contact-value">{contactInfo.phone1}</span>
-                    </div>
-                    <div className="contact-info-item">
-                      <span className="contact-label">📞 Phone 2</span>
-                      <span className="contact-value">{contactInfo.phone2}</span>
-                    </div>
-                    <div className="contact-info-item">
-                      <span className="contact-label">✉️ Email</span>
-                      <span className="contact-value">{contactInfo.email}</span>
-                    </div>
-                    <div className="contact-info-item">
-                      <span className="contact-label">📍 Address</span>
-                      <span className="contact-value">{contactInfo.address}</span>
-                    </div>
-                  </div>
-                  <button className="edit-contact-btn" onClick={() => {
-                    setEditContactMode(true);
-                    setContactFormData(contactInfo);
-                  }}>
-                    ✏️ Edit Contact Info
-                  </button>
+              <div className="contact-info-display">
+                <div className="contact-info-card">
+                  <div className="contact-info-item"><span className="contact-label">📞 Phone 1</span><span className="contact-value">{contactInfo.phone1}</span></div>
+                  <div className="contact-info-item"><span className="contact-label">📞 Phone 2</span><span className="contact-value">{contactInfo.phone2}</span></div>
+                  <div className="contact-info-item"><span className="contact-label">✉️ Email</span><span className="contact-value">{contactInfo.email}</span></div>
+                  <div className="contact-info-item"><span className="contact-label">📍 Address</span><span className="contact-value">{contactInfo.address}</span></div>
                 </div>
-              </>
+                <button className="edit-contact-btn" onClick={() => { setEditContactMode(true); setContactFormData(contactInfo); }}>✏️ Edit Contact Info</button>
+              </div>
             ) : (
               <div className="contact-edit-form">
                 <h4>Edit Contact Information</h4>
                 <div className="admin-form-grid">
-                  <div className="admin-field">
-                    <label>Phone Number 1 *</label>
-                    <input type="text" value={contactFormData.phone1} onChange={(e) => setContactFormData({...contactFormData, phone1: e.target.value})} placeholder="+91 7060998050" />
-                  </div>
-                  <div className="admin-field">
-                    <label>Phone Number 2</label>
-                    <input type="text" value={contactFormData.phone2} onChange={(e) => setContactFormData({...contactFormData, phone2: e.target.value})} placeholder="+91 7906396629" />
-                  </div>
-                  <div className="admin-field">
-                    <label>Email Address *</label>
-                    <input type="email" value={contactFormData.email} onChange={(e) => setContactFormData({...contactFormData, email: e.target.value})} placeholder="contact@email.com" />
-                  </div>
-                  <div className="admin-field full-width">
-                    <label>Address *</label>
-                    <textarea value={contactFormData.address} onChange={(e) => setContactFormData({...contactFormData, address: e.target.value})} rows="3" placeholder="Full address" />
-                  </div>
+                  <div className="admin-field"><label>Phone Number 1 *</label><input type="text" value={contactFormData.phone1} onChange={(e) => setContactFormData({...contactFormData, phone1: e.target.value})} placeholder="+91 7060998050" /></div>
+                  <div className="admin-field"><label>Phone Number 2</label><input type="text" value={contactFormData.phone2} onChange={(e) => setContactFormData({...contactFormData, phone2: e.target.value})} placeholder="+91 7906396629" /></div>
+                  <div className="admin-field"><label>Email Address *</label><input type="email" value={contactFormData.email} onChange={(e) => setContactFormData({...contactFormData, email: e.target.value})} placeholder="contact@email.com" /></div>
+                  <div className="admin-field full-width"><label>Address *</label><textarea value={contactFormData.address} onChange={(e) => setContactFormData({...contactFormData, address: e.target.value})} rows="3" placeholder="Full address" /></div>
                 </div>
                 <div className="admin-form-buttons">
                   <button className="admin-save-btn" onClick={saveContactInfo}>💾 Save Changes</button>
-                  <button className="admin-cancel-btn" onClick={() => {
-                    setEditContactMode(false);
-                    setContactFormData(contactInfo);
-                  }}>Cancel</button>
+                  <button className="admin-cancel-btn" onClick={() => { setEditContactMode(false); setContactFormData(contactInfo); }}>Cancel</button>
                 </div>
               </div>
             )}
-            <div className="contact-info-note">
-              <p>💡 Changes will reflect immediately on the website's contact section.</p>
-            </div>
+            <div className="contact-info-note"><p>💡 Changes will reflect immediately on the website's contact section.</p></div>
           </div>
         )}
 

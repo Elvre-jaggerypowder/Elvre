@@ -41,7 +41,7 @@ const SocialRow = ({ socialLoading, onSocial }) => (
   </>
 );
 
-// ─── BranchMotif (unchanged) ────────────────────────
+// ─── BranchMotif ─────────────────────────────────────
 const BranchMotif = ({ animKey }) => (
   <svg key={animKey} className="auth-branch-svg" viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
     <path d="M20 130 C 40 100, 45 80, 40 55 C 55 65, 70 60, 75 40 C 85 55, 100 55, 110 35" />
@@ -74,17 +74,18 @@ const UserLogin = () => {
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [isBlocked, setIsBlocked] = useState(false);
   
-  // ⭐⭐⭐ FORGOT PASSWORD KE LIYE NAYA STATE ⭐⭐⭐
   const [resetMessage, setResetMessage] = useState("");
 
   const navigate = useNavigate();
 
-  const ADMIN_EMAIL = process.env.REACT_APP_ADMIN_EMAIL || "elvreofficals@gmail.com";
+  // ✅ Admin credentials – make sure this matches your actual admin email
+  const ADMIN_EMAIL = process.env.REACT_APP_ADMIN_EMAIL || "elvreofficial@gmail.com";
   const ADMIN_PASSWORD = process.env.REACT_APP_ADMIN_PASSWORD || "Elvre@2024";
 
+  // Session timeout for regular users (not admin)
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (localStorage.getItem("currentUser")) {
+      if (localStorage.getItem("currentUser") && !localStorage.getItem("adminLoggedIn")) {
         localStorage.removeItem("currentUser");
         alert("Session expired. Please login again.");
         navigate("/login");
@@ -95,14 +96,14 @@ const UserLogin = () => {
 
   const switchMode = (next) => {
     setError("");
-    setResetMessage(""); // Reset message clear karo
+    setResetMessage("");
     setMode(next);
     setAnimKey((k) => k + 1);
     setLoginAttempts(0);
     setIsBlocked(false);
   };
 
-  // ── ⭐⭐⭐ FORGOT PASSWORD FUNCTION ⭐⭐⭐ ──
+  // ── FORGOT PASSWORD ──
   const handleForgotPassword = async () => {
     setError("");
     setResetMessage("");
@@ -112,7 +113,6 @@ const UserLogin = () => {
       return;
     }
 
-    // Email format check
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError("Please enter a valid email address.");
@@ -122,7 +122,7 @@ const UserLogin = () => {
     setLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/login', // Reset ke baad login page pe wapas aayega
+        redirectTo: window.location.origin + '/login',
       });
 
       if (error) {
@@ -153,14 +153,36 @@ const UserLogin = () => {
     const trimmedEmail = email.trim();
     const trimmedPassword = password.trim();
 
+    // ─── ADMIN CHECK (with Supabase Auth) ───
     if (trimmedEmail === ADMIN_EMAIL && trimmedPassword === ADMIN_PASSWORD) {
-      localStorage.setItem("adminLoggedIn", "true");
-      localStorage.removeItem("currentUser");
-      setLoading(false);
-      navigate("/admin-dashboard");
-      return;
+      setLoading(true);
+      try {
+        // ✅ Sign in with Supabase Auth to get a valid session
+        const { data, error: authError } = await supabase.auth.signInWithPassword({
+          email: trimmedEmail,
+          password: trimmedPassword,
+        });
+
+        if (authError) {
+          setError("Admin user not found in Auth. Please sign up once with this email or create in Supabase Dashboard.");
+          setLoading(false);
+          return;
+        }
+
+        // Set admin flags
+        localStorage.setItem("adminLoggedIn", "true");
+        localStorage.setItem("adminEmail", trimmedEmail);
+        setLoading(false);
+        navigate("/admin-dashboard");
+        return;
+      } catch (err) {
+        setError("Login error: " + err.message);
+        setLoading(false);
+        return;
+      }
     }
 
+    // ─── REGULAR USER LOGIN ───
     setLoading(true);
     try {
       const { data, error: authError } = await supabase.auth.signInWithPassword({
@@ -316,7 +338,6 @@ const UserLogin = () => {
             <p className="auth-sub">Login to your account</p>
 
             {mode === "login" && error && <div className="auth-error">{error}</div>}
-            {/* ⭐ FORGOT PASSWORD SUCCESS MESSAGE SHOW KARO */}
             {resetMessage && <div className="auth-success" style={{background: '#e8f5e9', color: '#2e7d32', padding: '10px', borderRadius: '8px', marginBottom: '15px'}}>{resetMessage}</div>}
 
             <form onSubmit={handleLogin}>
@@ -355,7 +376,6 @@ const UserLogin = () => {
                 </div>
               </div>
 
-              {/* ⭐⭐⭐ YAHAN PAR "FORGOT PASSWORD?" BUTTON ADD KIYA HAI ⭐⭐⭐ */}
               <div style={{ textAlign: 'right', marginTop: '-8px', marginBottom: '15px' }}>
                 <button 
                   type="button" 
