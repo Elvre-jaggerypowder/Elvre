@@ -1,5 +1,5 @@
 .hero-section {
-  height: 100vh;
+  height: 110vh;
   width: 100%;
   position: relative;
   overflow: hidden;
@@ -15,7 +15,10 @@
   height: 100%;
 }
 
-/* 🔥 Naya overlay - taaki text clear dikhe bina heavy shadow ke (clean look) */
+.hero-slide{
+    position:absolute;
+    inset:0;
+}
 .image-slider::after {
   content: '';
   position: absolute;
@@ -23,89 +26,98 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, rgba(26, 46, 26, 0.5) 0%, rgba(0, 0, 0, 0.2) 100%);
   z-index: 1;
   pointer-events: none;
 }
-
-.slide-image {
+.hero-product-image {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center;
-  animation-duration: 8s;
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
-  opacity: 0;
-  /* Premium zoom effect ke liye */
-  transform: scale(1.05);
+  object-fit: contain;
+  object-position: center bottom;
+  margin-top: 50px;
+  opacity: 1;
 }
 
-.jaggery-img {
-  animation-name: jaggerySlide;
-}
-
-.product-img {
-  animation-name: productSlide;
-}
-
-/* Zoom in/out effect - luxury brands wala feel */
-@keyframes jaggerySlide {
-  0%, 40% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50%, 100% {
-    opacity: 0;
-    transform: scale(1.1);
-  }
-}
-
-@keyframes productSlide {
-  0%, 40% {
-    opacity: 0;
-    transform: scale(1.1);
-  }
-  50%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* Text at TOP RIGHT - Clean, No Blur */
-.hero-text {
+.product-highlight {
+  font-size: 1.5rem;
   position: absolute;
-  top: 15%;
+  top: 50%;
   right: 6%;
-  text-align: right;
-  z-index: 3;
-  max-width: 550px;
+  padding: 8px 22px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(8px);
+  color: #8b1804;
+  z-index: 20;
+  animation: floatingText 3s ease-in-out infinite,
+             glowBorder 2.5s ease-in-out infinite;
+}
+.hero-tagline{
+  font-size: 1.5rem;
+  position:absolute;
+  top:20%;
+  left:13%;
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(8px);
+  padding:8px 22px;
+  border-radius:18px;
+  color:#8b1804;
+  z-index:20;
+  animation: floatingText 3s ease-in-out infinite,
+              glowBorder 2.5s ease-in-out infinite;
+}
+.hero-tagline1{
+  font-size:1.5rem;
+  position:absolute;
+  top:70%;
+  left:6.5%;
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(8px);
+  padding:8px 22px;
+  border-radius:18px;
+  color:#8b1804;
+  z-index:20;
+  animation: floatingText 3s ease-in-out infinite,
+              glowBorder 2.5s ease-in-out infinite;
 }
 
-.hero-text h1 {
-  color: #ffffff;
-  font-size: clamp(1.4rem, 4vw, 2.8rem);
-  font-weight: 700;
-  margin: 0;
-  /* Cormorant Garamond elegant hai - aapke fonts folder mein hai */
-  font-family: 'Cormorant Garamond', 'Livvicsemibold', serif;
-  line-height: 1.2;
-  letter-spacing: 2px;
-  /* Halka sa shadow, kyunki overlay pehle se hai */
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+.highlight-text1{
+  padding-left:20%;
+  line-height:1;
+}
+.tagline-title1{
+  padding-left:24%;
+  line-height:1;
+}
+.tagline-title3{
+  padding-left:34%;
+  line-height:1;
 }
 
-.hero-text h1 span {
-  /* Gold hata kar earthy brown/gold use kiya - match karta hai Brown theme se */
-  color: #D4A373;
-  font-weight: 700;
-  display: block;
-  margin-top: 8px;
-  text-shadow: 0 2px 12px rgba(212, 163, 115, 0.2);
+
+@keyframes floatingText{
+  0%{
+    transform:translateY(0px);
+  }
+
+  50%{
+    transform:translateY(-12px);
+  }
+
+  100%{
+    transform:translateY(0px);
+  }
 }
+
+
+.hero-text span{
+  display:block;
+  margin-top:15px;
+  font-size:28px;
+}
+
 
 .buy-now-btn {
   position: absolute;
@@ -121,13 +133,13 @@
   cursor: pointer;
   z-index: 3;
   transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  font-family: 'Livvic', sans-serif;
+  font-family: 'ProximaNovaRegular';
   letter-spacing: 1px;
   box-shadow: 0 8px 25px rgba(109, 76, 42, 0.3);
 }
 
 .buy-now-btn:hover {
-  background: #6D4C2A; /* Dark Brown - asli ELVRE color */
+  background: #6D4C2A; 
   color: #ffffff;
   transform: translateY(-5px) scale(1.02);
   box-shadow: 0 15px 40px rgba(109, 76, 42, 0.4);

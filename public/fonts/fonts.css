@@ -20,3 +20,7 @@
   font-family: 'Livvicsemibold';
   src: url('./LivvicSemiBold.ttf') format('truetype');
 }
+@font-face {
+  font-family: 'ProximaNovaRegular';
+  src: url('./ProximaNovaRegular.ttf') format('truetype');
+}

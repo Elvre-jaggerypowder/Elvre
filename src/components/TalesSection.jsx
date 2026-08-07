@@ -285,7 +285,7 @@ const TalesSection = () => {
   return (
     <section className="tales-section">
       <div className="tales-header">
-        <h2 className="section-title">✨ ELVRE Tales</h2>
+        <h2 className="section-title">ELVRE Tales</h2>
         <p className="section-subtitle">Real stories from our happy customers</p>
       </div>
 
