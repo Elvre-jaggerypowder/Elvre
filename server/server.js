@@ -14,12 +14,6 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ FIX: CORS was fully open (`app.use(cors())` with no config), which lets
-// ANY website call your payment endpoints, not just elvre.in. Now it only
-// accepts requests from an explicit allow-list. Set ALLOWED_ORIGINS in your
-// .env as a comma-separated list, e.g.:
-//   ALLOWED_ORIGINS=https://www.elvre.in,https://elvre.in
-// Localhost is always allowed too, so local development keeps working.
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
   .split(',')
   .map((o) => o.trim())
@@ -52,11 +46,6 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// ✅ FIX: simple per-IP rate limiter (no extra npm package needed) so a
-// script can't hammer /api/create-order or /api/verify-payment hundreds of
-// times a second. This is intentionally lightweight — for a production
-// system handling real scale, swap this for the `express-rate-limit`
-// package with a shared store (Redis) if you run multiple server instances.
 const requestLog = new Map(); // ip -> [timestamps]
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 const RATE_LIMIT_MAX = 20; // max requests per window per IP
@@ -103,13 +92,7 @@ app.post('/api/create-order', rateLimit, async (req, res) => {
       });
     }
 
-    // ⚠️ STILL TODO (needs your product/cart data on the server to do
-    // properly): this endpoint currently trusts whatever `amount` the
-    // client sends. A user could intercept the network request and lower
-    // it before the Razorpay order is created. To close this gap, look up
-    // the real cart total from Supabase here (using a cart/session id sent
-    // from the client, not a raw amount) and use *that* value instead of
-    // trusting req.body.amount directly.
+    
 
     const options = {
       amount: Math.round(amount),

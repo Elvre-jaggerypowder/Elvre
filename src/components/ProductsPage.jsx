@@ -4,14 +4,8 @@ import Navbar from "./Navbar";
 import WhatsApp from "./WhatsApp";
 import { supabase } from '../supabaseClient';
 import { useWishlist } from "../context/WishlistContext";
-import {
-  FaHeart, FaRegHeart, FaLeaf, FaFlask, FaSeedling,
-  FaCheckCircle, FaTimesCircle, FaEye, FaShoppingCart,
-  FaShieldAlt, FaTruck, FaHeadset
-} from "react-icons/fa";
+import { FaHeart, FaRegHeart } from "react-icons/fa";
 import "./ProductsPage.css";
-
-const DEFAULT_RATING = 4.0;
 
 const ProductsPage = () => {
   const location = useLocation();
@@ -44,7 +38,7 @@ const ProductsPage = () => {
         .from('products')
         .select('*')
         .order('id', { ascending: true });
-
+      
       if (error) {
         console.error('❌ Supabase error:', error);
         const cached = localStorage.getItem("elvreProducts");
@@ -85,7 +79,7 @@ const ProductsPage = () => {
       const { data, error } = await supabase
         .from('reviews')
         .select('*');
-
+      
       if (error) {
         console.error('❌ Reviews error:', error);
         const saved = JSON.parse(localStorage.getItem("productReviews") || "{}");
@@ -107,7 +101,7 @@ const ProductsPage = () => {
         Object.keys(reviewMap).forEach(pid => {
           const avg = reviewMap[pid].total / reviewMap[pid].count;
           formatted[pid] = {
-            rating: parseFloat(avg.toFixed(1)),
+            rating: avg.toFixed(1),
             count: reviewMap[pid].count
           };
         });
@@ -139,7 +133,7 @@ const ProductsPage = () => {
   useEffect(() => {
     const subscription = supabase
       .channel('products-channel')
-      .on('postgres_changes',
+      .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'products' },
         () => loadProducts()
       )
@@ -164,7 +158,7 @@ const ProductsPage = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [products, searchQuery, selectedCategory, priceRange, sortBy, reviews]);
+  }, [products, searchQuery, selectedCategory, priceRange, sortBy]);
 
   const applyFilters = () => {
     let filtered = [...products];
@@ -191,11 +185,9 @@ const ProductsPage = () => {
       case "price-high-low":
         filtered.sort((a, b) => b.priceValue - a.priceValue);
         break;
-      case "rating": {
-        const getRating = (p) => reviews[p.id]?.rating ?? DEFAULT_RATING;
-        filtered.sort((a, b) => getRating(b) - getRating(a));
+      case "rating":
+        filtered.sort((a, b) => (reviews[a.id]?.rating || 0) - (reviews[b.id]?.rating || 0));
         break;
-      }
       case "name-asc":
         filtered.sort((a, b) => a.name.localeCompare(b.name));
         break;
@@ -211,12 +203,11 @@ const ProductsPage = () => {
     setSelectedCategory("all");
     setPriceRange({ min: 0, max: 1000 });
     setSortBy("default");
-    setShowFilters(false);
     navigate("/products");
   };
 
   const addToCart = (product, e) => {
-    if (e) e.stopPropagation();
+    if (e) e.stopPropagation(); // Prevent navigation
     const cart = JSON.parse(localStorage.getItem("cart") || "[]");
     const existing = cart.find(item => item.id === product.id);
     if (existing) {
@@ -226,10 +217,9 @@ const ProductsPage = () => {
     }
     localStorage.setItem("cart", JSON.stringify(cart));
     window.dispatchEvent(new Event("storage"));
-
     const toast = document.createElement("div");
     toast.className = "cart-toast";
-    toast.textContent = `✓ ${product.name} added to cart!`;
+    toast.innerHTML = `✓ ${product.name} added to cart!`;
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 2000);
   };
@@ -243,37 +233,9 @@ const ProductsPage = () => {
     }
   };
 
-  // FIX: supports a `product.features` array (up to 3 short tags shown as
-  // pills over the hero photo). Falls back to sensible defaults per
-  // category so every card looks complete even without extra backend data.
-  const FEATURE_ICONS = [FaLeaf, FaFlask, FaSeedling];
-  const DEFAULT_FEATURES = {
-    jaggery: ["100% Natural", "Chemical Free", "Rich in Iron & Minerals"],
-    organic: ["100% Organic", "No Preservatives", "Farm Fresh"],
-    special: ["Premium Quality", "Limited Batch", "Handcrafted"],
-    default: ["100% Natural", "Chemical Free", "Premium Quality"]
-  };
-
-  const getProductFeatures = (product) => {
-    if (Array.isArray(product.features) && product.features.length > 0) {
-      return product.features.slice(0, 3);
-    }
-    return DEFAULT_FEATURES[product.category] || DEFAULT_FEATURES.default;
-  };
-
   const getCategoryCount = (categoryId) => {
     if (categoryId === "all") return products.length;
     return products.filter(p => p.category === categoryId).length;
-  };
-
-  const handleMinPriceChange = (value) => {
-    const min = parseInt(value) || 0;
-    setPriceRange(prev => ({ ...prev, min: Math.min(min, prev.max) }));
-  };
-
-  const handleMaxPriceChange = (value) => {
-    const max = parseInt(value) || 0;
-    setPriceRange(prev => ({ ...prev, max: Math.max(max, prev.min) }));
   };
 
   if (loading) {
@@ -354,7 +316,7 @@ const ProductsPage = () => {
                       min="0"
                       max="1000"
                       value={priceRange.max}
-                      onChange={(e) => handleMaxPriceChange(e.target.value)}
+                      onChange={(e) => setPriceRange({ ...priceRange, max: parseInt(e.target.value) })}
                       className="price-slider"
                       style={{
                         background: `linear-gradient(to right, #8B5E3C 0%, #8B5E3C ${(priceRange.max / 1000) * 100}%, #ddd ${(priceRange.max / 1000) * 100}%, #ddd 100%)`
@@ -368,7 +330,7 @@ const ProductsPage = () => {
                     type="number"
                     placeholder="Min"
                     value={priceRange.min}
-                    onChange={(e) => handleMinPriceChange(e.target.value)}
+                    onChange={(e) => setPriceRange({ ...priceRange, min: parseInt(e.target.value) || 0 })}
                     className="price-input"
                   />
                   <span className="price-dash">—</span>
@@ -376,7 +338,7 @@ const ProductsPage = () => {
                     type="number"
                     placeholder="Max"
                     value={priceRange.max}
-                    onChange={(e) => handleMaxPriceChange(e.target.value)}
+                    onChange={(e) => setPriceRange({ ...priceRange, max: parseInt(e.target.value) || 1000 })}
                     className="price-input"
                   />
                 </div>
@@ -403,14 +365,14 @@ const ProductsPage = () => {
               <div className="products-header-bar">
                 <p>{filteredProducts.length} products found</p>
                 <div className="view-options">
-                  <button
+                  <button 
                     className={`view-btn ${viewMode === "grid" ? "active" : ""}`}
                     onClick={() => setViewMode("grid")}
                     title="Grid View"
                   >
                     ⊞
                   </button>
-                  <button
+                  <button 
                     className={`view-btn ${viewMode === "list" ? "active" : ""}`}
                     onClick={() => setViewMode("list")}
                     title="List View"
@@ -430,57 +392,40 @@ const ProductsPage = () => {
               ) : (
                 <div className={`products-grid-list ${viewMode === "list" ? "list-view" : "grid-view"}`}>
                   {filteredProducts.map((product) => {
-                    const rating = reviews[product.id]?.rating ?? DEFAULT_RATING;
+                    // Get rating for this product
+                    const rating = reviews[product.id]?.rating || 4.0;
                     const reviewCount = reviews[product.id]?.count || 0;
-                    const description = product.description || "";
-                    const features = getProductFeatures(product);
 
                     return (
-                      <div
-                        key={product.id}
+                      <div 
+                        key={product.id} 
                         className="product-card"
-                        onClick={() => navigate(`/product/${product.id}`)}
+                        onClick={() => navigate(`/product/${product.id}`)} // Entire card clickable
                         style={{ cursor: 'pointer' }}
                       >
-                        <div className="product-hero">
-                          <img src={product.image || "/assets/jaggery.png"} alt={product.name} className="hero-img" />
-
-                          {product.badge && (
-                            <span className="hero-badge">
-                              <FaLeaf /> {product.badge}
-                            </span>
-                          )}
-
-                          <button
-                            className="hero-wishlist"
-                            onClick={(e) => toggleWishlist(product, e)}
-                            title={isInWishlist(product.id) ? "Remove from wishlist" : "Add to wishlist"}
-                          >
-                            {isInWishlist(product.id) ? (
-                              <FaHeart style={{ color: "#e74c3c" }} />
-                            ) : (
-                              <FaRegHeart />
-                            )}
-                          </button>
-
-                          <div className="hero-features">
-                            {features.map((feature, i) => {
-                              const Icon = FEATURE_ICONS[i] || FaLeaf;
-                              return (
-                                <React.Fragment key={feature}>
-                                  <span className="hero-feature">
-                                    <Icon /> {feature}
-                                  </span>
-                                  {i < features.length - 1 && <span className="hero-feature-divider" />}
-                                </React.Fragment>
-                              );
-                            })}
-                          </div>
+                        {product.badge && (
+                          <span className={`product-badge ${product.badge.toLowerCase()}`}>{product.badge}</span>
+                        )}
+                        <div className="product-image">
+                          <img src={product.image || "/assets/jaggery.png"} alt={product.name} />
+                          {/* ✅ Quick View overlay REMOVED – no overlay */}
                         </div>
-
                         <div className="product-info">
-                          <h3>{product.name}</h3>
-
+                          <div className="product-header-row">
+                            <h3>{product.name}</h3>
+                            {/* Wishlist Button – stops propagation */}
+                            <button 
+                              className="wishlist-btn" 
+                              onClick={(e) => toggleWishlist(product, e)}
+                              title={isInWishlist(product.id) ? "Remove from wishlist" : "Add to wishlist"}
+                            >
+                              {isInWishlist(product.id) ? (
+                                <FaHeart style={{ color: "#e74c3c" }} />
+                              ) : (
+                                <FaRegHeart />
+                              )}
+                            </button>
+                          </div>
                           <div className="product-rating">
                             <div className="stars">
                               {"★".repeat(Math.floor(rating))}
@@ -488,53 +433,37 @@ const ProductsPage = () => {
                             </div>
                             <span>({reviewCount} reviews)</span>
                           </div>
-
-                          <div className="info-divider" />
-
-                          {description && (
-                            <p className="product-description">
-                              <FaLeaf className="desc-icon" /> <span>{description}</span>
-                            </p>
-                          )}
-
+                          <p className="product-description">{product.description?.substring(0, 80)}...</p>
                           <div className="product-price">
                             <span className="current-price">{product.price}</span>
                             <span className="original-price">₹{Math.round(product.priceValue * 1.2)}</span>
                             <span className="discount">Save {Math.round(product.priceValue * 0.2)}₹</span>
                           </div>
-
-                          <div className={`stock-banner ${product.stock > 0 ? "in-stock" : "out-of-stock"}`}>
+                          <div className="stock-status">
                             {product.stock > 0 ? (
-                              <><FaCheckCircle /> In Stock ({product.stock} left)</>
+                              <span className="in-stock">✓ In Stock ({product.stock} left)</span>
                             ) : (
-                              <><FaTimesCircle /> Out of Stock</>
+                              <span className="out-of-stock">✗ Out of Stock</span>
                             )}
                           </div>
-
                           <div className="product-actions">
-                            <button
-                              className="view-details"
+                            {/* View Details button also navigates (but now card is clickable too) */}
+                            <button 
+                              className="view-details" 
                               onClick={(e) => {
                                 e.stopPropagation();
                                 navigate(`/product/${product.id}`);
                               }}
                             >
-                              <FaEye /> View Details
+                              View Details
                             </button>
-                            <button
-                              className="add-to-cart"
+                            <button 
+                              className="add-to-cart" 
                               onClick={(e) => addToCart(product, e)}
                               disabled={product.stock === 0}
                             >
-                              <FaShoppingCart /> Add to Cart
+                              Add to Cart
                             </button>
-                          </div>
-
-                          <div className="trust-footer">
-                            <span><FaShieldAlt /> Trusted Quality</span>
-                            <span><FaLeaf /> No Artificial Additives</span>
-                            <span><FaTruck /> Fast &amp; Safe Delivery</span>
-                            <span><FaHeadset /> Customer Support</span>
                           </div>
                         </div>
                       </div>

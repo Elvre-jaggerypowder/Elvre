@@ -5,7 +5,7 @@ import { supabase } from "../supabaseClient";
 import { FaEye, FaEyeSlash } from 'react-icons/fa'; 
 import "./UserLogin.css";
 
-// ─── SocialRow ──────────────────────────────────────
+// ─── SocialRow (Google only) ────────────────────────
 const SocialRow = ({ socialLoading, onSocial }) => (
   <>
     <div className="auth-divider">
@@ -26,17 +26,7 @@ const SocialRow = ({ socialLoading, onSocial }) => (
         </svg>
         {socialLoading.google ? "Loading..." : "Google"}
       </button>
-      <button
-        type="button"
-        className="auth-social-btn"
-        onClick={() => onSocial("facebook")}
-        disabled={socialLoading.facebook}
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="#1877F2"/>
-        </svg>
-        {socialLoading.facebook ? "Loading..." : "Facebook"}
-      </button>
+      {/* Facebook button removed */}
     </div>
   </>
 );
@@ -70,7 +60,7 @@ const UserLogin = () => {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [socialLoading, setSocialLoading] = useState({ google: false, facebook: false });
+  const [socialLoading, setSocialLoading] = useState({ google: false });
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [isBlocked, setIsBlocked] = useState(false);
   
@@ -78,11 +68,10 @@ const UserLogin = () => {
 
   const navigate = useNavigate();
 
-  // ✅ Admin credentials – make sure this matches your actual admin email
   const ADMIN_EMAIL = process.env.REACT_APP_ADMIN_EMAIL || "elvreofficial@gmail.com";
   const ADMIN_PASSWORD = process.env.REACT_APP_ADMIN_PASSWORD || "Elvre@2024";
 
-  // Session timeout for regular users (not admin)
+  // Session timeout for regular users
   useEffect(() => {
     const timer = setTimeout(() => {
       if (localStorage.getItem("currentUser") && !localStorage.getItem("adminLoggedIn")) {
@@ -157,7 +146,6 @@ const UserLogin = () => {
     if (trimmedEmail === ADMIN_EMAIL && trimmedPassword === ADMIN_PASSWORD) {
       setLoading(true);
       try {
-        // ✅ Sign in with Supabase Auth to get a valid session
         const { data, error: authError } = await supabase.auth.signInWithPassword({
           email: trimmedEmail,
           password: trimmedPassword,
@@ -169,7 +157,6 @@ const UserLogin = () => {
           return;
         }
 
-        // Set admin flags
         localStorage.setItem("adminLoggedIn", "true");
         localStorage.setItem("adminEmail", trimmedEmail);
         setLoading(false);
@@ -278,19 +265,7 @@ const UserLogin = () => {
       }
 
       if (data?.user) {
-        const { error: insertError } = await supabase
-          .from("users")
-          .insert([
-            { id: data.user.id, name: trimmedName, email: trimmedEmail, phone: trimmedPhone }
-          ]);
-
-        if (insertError) {
-          console.error('Profile save error:', insertError);
-          setError("Profile creation failed.");
-          setLoading(false);
-          return;
-        }
-
+        // Trigger will create the row in users table.
         setLoading(false);
         alert("Account created! Please check your email to verify.");
         navigate("/login");
@@ -298,21 +273,25 @@ const UserLogin = () => {
       }
       setError("Signup failed.");
     } catch (err) {
-      setError("Something went wrong.");
+      console.error("Signup error:", err);
+      setError("Something went wrong. Please try again.");
       setLoading(false);
     }
   };
 
-  // ── SOCIAL ─────────────────────────────────────────
+  // ── SOCIAL LOGIN ──
   const handleSocialLogin = async (provider) => {
     setSocialLoading((s) => ({ ...s, [provider]: true }));
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: { redirectTo: window.location.origin + "/auth/callback" },
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: provider,
+        options: {
+          redirectTo: window.location.origin + "/auth/callback",
+        },
       });
       if (error) throw error;
     } catch (err) {
+      console.error("Social login error:", err);
       alert("Failed to login with " + provider);
     } finally {
       setSocialLoading((s) => ({ ...s, [provider]: false }));
