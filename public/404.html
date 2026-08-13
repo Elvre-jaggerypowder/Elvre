@@ -2,9 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="%PUBLIC_URL%/Whitesubmark1.png" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
     <link rel="stylesheet" href="%PUBLIC_URL%/fonts/fonts.css" />
     <meta name="theme-color" content="#000000" />
     <meta name="description" content="ELVRE - Natural Jaggery" />
@@ -13,16 +16,29 @@
     <title>ELVRE - Natural Jaggery</title>
   </head>
   <body>
-    <!-- ⭐⭐⭐ ADD THIS SCRIPT AT THE TOP ⭐⭐⭐ -->
+    <!-- ⭐⭐⭐ FIXED SCRIPT – handles both path param and direct 404 ───>
     <script>
       (function() {
-        // Check if there is a 'path' parameter (set by 404.html)
+        // If we are on the root path, do nothing
+        if (window.location.pathname === '/' || window.location.pathname === '') {
+          return;
+        }
+
+        // Check if there is a 'path' parameter from 404.html redirect
         var params = new URLSearchParams(window.location.search);
         var path = params.get('path');
+
         if (path) {
-          // Remove the 'path' parameter from URL and navigate
+          // Decode and restore the original URL (excluding the query param)
           var cleanUrl = decodeURIComponent(path);
+          // Use replaceState so browser back button works
           history.replaceState(null, '', cleanUrl);
+        } else {
+          // No 'path' param – this might be a direct 404 (e.g., /auth/callback)
+          // We'll redirect to the root with the path as a query param,
+          // so that the SPA can handle it.
+          var currentPath = window.location.pathname + window.location.search;
+          window.location.href = '/' + '?path=' + encodeURIComponent(currentPath);
         }
       })();
     </script>
