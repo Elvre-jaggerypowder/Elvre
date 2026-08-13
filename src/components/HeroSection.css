@@ -61,7 +61,7 @@
 .tagline-title1 {
   font-size: clamp(0.95rem, 2.6vw + 0.4rem, 2.6rem);
   padding-left: clamp(8px, 15%, 40px);
-  color: #f5e6d3;
+  color: #d97f0b;
 }
 
 /* ─── BOTTOM LEFT TEXT BLOCK ─── */
@@ -76,7 +76,7 @@
 }
 .tagline-title2 {
   font-size: clamp(0.8rem, 2vw + 0.3rem, 2rem);
-  color: #f5e6d3;
+  color: #e0860f;
 }
 
 /* ─── RIGHT SIDE TEXT BLOCK ─── */
@@ -92,7 +92,7 @@
 .highlight-text1 {
   font-size: clamp(1.05rem, 3vw + 0.4rem, 3rem);
   padding-left: clamp(8px, 15%, 40px);
-  color: #f5e6d3;
+  color: #ab6810;
   line-height: 1.1;
 }
 
