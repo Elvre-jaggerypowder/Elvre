@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import AOS from "aos";
 import "aos/dist/aos.css";
 
@@ -53,7 +53,7 @@ const ProtectedRoute = ({ children }) => {
 };
 
 // ============================================
-// LAYOUT Component – includes Navbar, Chatbot, Footer, BottomNav
+// LAYOUT Component
 // ============================================
 const Layout = ({ children, isChatbotOpen, setIsChatbotOpen }) => (
   <>
@@ -88,23 +88,15 @@ function App() {
         <ContentProvider>
           <Router>
             <Routes>
-              {/* ✅ Admin Routes – Only Dashboard (login handled by UserLogin) */}
               <Route path="/admin-dashboard" element={<AdminDashboard />} />
-
-              {/* Auth Callback – No Layout (redirects to login/home) */}
               <Route path="/auth/callback" element={<AuthCallback />} />
-
-              {/* ✅ Redirect /admin to /login (since AdminLogin removed) */}
               <Route path="/admin" element={<Navigate to="/login" replace />} />
 
-              {/* Public Routes – with Layout */}
+              {/* Public Routes */}
               <Route
                 path="/"
                 element={
-                  <Layout
-                    isChatbotOpen={isChatbotOpen}
-                    setIsChatbotOpen={setIsChatbotOpen}
-                  >
+                  <Layout isChatbotOpen={isChatbotOpen} setIsChatbotOpen={setIsChatbotOpen}>
                     <Home />
                   </Layout>
                 }
@@ -112,10 +104,7 @@ function App() {
               <Route
                 path="/products"
                 element={
-                  <Layout
-                    isChatbotOpen={isChatbotOpen}
-                    setIsChatbotOpen={setIsChatbotOpen}
-                  >
+                  <Layout isChatbotOpen={isChatbotOpen} setIsChatbotOpen={setIsChatbotOpen}>
                     <ProductsPage />
                   </Layout>
                 }
@@ -123,10 +112,7 @@ function App() {
               <Route
                 path="/product/:id"
                 element={
-                  <Layout
-                    isChatbotOpen={isChatbotOpen}
-                    setIsChatbotOpen={setIsChatbotOpen}
-                  >
+                  <Layout isChatbotOpen={isChatbotOpen} setIsChatbotOpen={setIsChatbotOpen}>
                     <ProductDetails />
                   </Layout>
                 }
@@ -134,10 +120,7 @@ function App() {
               <Route
                 path="/cart"
                 element={
-                  <Layout
-                    isChatbotOpen={isChatbotOpen}
-                    setIsChatbotOpen={setIsChatbotOpen}
-                  >
+                  <Layout isChatbotOpen={isChatbotOpen} setIsChatbotOpen={setIsChatbotOpen}>
                     <Cart />
                   </Layout>
                 }
@@ -145,10 +128,7 @@ function App() {
               <Route
                 path="/wishlist"
                 element={
-                  <Layout
-                    isChatbotOpen={isChatbotOpen}
-                    setIsChatbotOpen={setIsChatbotOpen}
-                  >
+                  <Layout isChatbotOpen={isChatbotOpen} setIsChatbotOpen={setIsChatbotOpen}>
                     <Wishlist />
                   </Layout>
                 }
@@ -156,10 +136,7 @@ function App() {
               <Route
                 path="/our-story"
                 element={
-                  <Layout
-                    isChatbotOpen={isChatbotOpen}
-                    setIsChatbotOpen={setIsChatbotOpen}
-                  >
+                  <Layout isChatbotOpen={isChatbotOpen} setIsChatbotOpen={setIsChatbotOpen}>
                     <OurStory />
                   </Layout>
                 }
@@ -167,10 +144,7 @@ function App() {
               <Route
                 path="/blog"
                 element={
-                  <Layout
-                    isChatbotOpen={isChatbotOpen}
-                    setIsChatbotOpen={setIsChatbotOpen}
-                  >
+                  <Layout isChatbotOpen={isChatbotOpen} setIsChatbotOpen={setIsChatbotOpen}>
                     <Blog />
                   </Layout>
                 }
@@ -178,10 +152,7 @@ function App() {
               <Route
                 path="/contact"
                 element={
-                  <Layout
-                    isChatbotOpen={isChatbotOpen}
-                    setIsChatbotOpen={setIsChatbotOpen}
-                  >
+                  <Layout isChatbotOpen={isChatbotOpen} setIsChatbotOpen={setIsChatbotOpen}>
                     <Contact />
                   </Layout>
                 }
@@ -189,10 +160,7 @@ function App() {
               <Route
                 path="/terms"
                 element={
-                  <Layout
-                    isChatbotOpen={isChatbotOpen}
-                    setIsChatbotOpen={setIsChatbotOpen}
-                  >
+                  <Layout isChatbotOpen={isChatbotOpen} setIsChatbotOpen={setIsChatbotOpen}>
                     <TermsAndConditions />
                   </Layout>
                 }
@@ -200,23 +168,17 @@ function App() {
               <Route
                 path="/privacy"
                 element={
-                  <Layout
-                    isChatbotOpen={isChatbotOpen}
-                    setIsChatbotOpen={setIsChatbotOpen}
-                  >
+                  <Layout isChatbotOpen={isChatbotOpen} setIsChatbotOpen={setIsChatbotOpen}>
                     <PrivacyPolicy />
                   </Layout>
                 }
               />
 
-              {/* Auth Routes – with Layout */}
+              {/* Auth Routes */}
               <Route
                 path="/login"
                 element={
-                  <Layout
-                    isChatbotOpen={isChatbotOpen}
-                    setIsChatbotOpen={setIsChatbotOpen}
-                  >
+                  <Layout isChatbotOpen={isChatbotOpen} setIsChatbotOpen={setIsChatbotOpen}>
                     <UserLogin />
                   </Layout>
                 }
@@ -224,24 +186,18 @@ function App() {
               <Route
                 path="/signup"
                 element={
-                  <Layout
-                    isChatbotOpen={isChatbotOpen}
-                    setIsChatbotOpen={setIsChatbotOpen}
-                  >
+                  <Layout isChatbotOpen={isChatbotOpen} setIsChatbotOpen={setIsChatbotOpen}>
                     <UserSignup />
                   </Layout>
                 }
               />
 
-              {/* Protected Routes – with Layout */}
+              {/* Protected Routes */}
               <Route
                 path="/my-orders"
                 element={
                   <ProtectedRoute>
-                    <Layout
-                      isChatbotOpen={isChatbotOpen}
-                      setIsChatbotOpen={setIsChatbotOpen}
-                    >
+                    <Layout isChatbotOpen={isChatbotOpen} setIsChatbotOpen={setIsChatbotOpen}>
                       <OrdersPage />
                     </Layout>
                   </ProtectedRoute>
@@ -251,10 +207,7 @@ function App() {
                 path="/profile"
                 element={
                   <ProtectedRoute>
-                    <Layout
-                      isChatbotOpen={isChatbotOpen}
-                      setIsChatbotOpen={setIsChatbotOpen}
-                    >
+                    <Layout isChatbotOpen={isChatbotOpen} setIsChatbotOpen={setIsChatbotOpen}>
                       <UserProfile />
                     </Layout>
                   </ProtectedRoute>
@@ -264,10 +217,7 @@ function App() {
                 path="/checkout"
                 element={
                   <ProtectedRoute>
-                    <Layout
-                      isChatbotOpen={isChatbotOpen}
-                      setIsChatbotOpen={setIsChatbotOpen}
-                    >
+                    <Layout isChatbotOpen={isChatbotOpen} setIsChatbotOpen={setIsChatbotOpen}>
                       <Checkout />
                     </Layout>
                   </ProtectedRoute>
@@ -277,17 +227,13 @@ function App() {
                 path="/order-tracking/:orderId"
                 element={
                   <ProtectedRoute>
-                    <Layout
-                      isChatbotOpen={isChatbotOpen}
-                      setIsChatbotOpen={setIsChatbotOpen}
-                    >
+                    <Layout isChatbotOpen={isChatbotOpen} setIsChatbotOpen={setIsChatbotOpen}>
                       <OrderTracking />
                     </Layout>
                   </ProtectedRoute>
                 }
               />
 
-              {/* Catch all – redirect to home */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Router>
