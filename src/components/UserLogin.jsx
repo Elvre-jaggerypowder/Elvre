@@ -286,7 +286,7 @@ const UserLogin = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: provider,
         options: {
-          redirectTo: window.location.origin + "/auth/callback",
+          redirectTo:'https://elvre.in',
         },
       });
       if (error) throw error;
