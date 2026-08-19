@@ -28,10 +28,10 @@ const AdminDashboard = () => {
   
   // ─── CONTACT INFO ───
   const [contactInfo, setContactInfo] = useState({
-    phone1: "+91 7060998050",
-    phone2: "+91 7906396629",
-    email: "elvreofficals@gmail.com",
-    address: "1st Floor, Sangam Tent House, Jawalapur, Haridwar, Uttrakhand, 249407"
+    phone1: "",
+    phone2: "",
+    email: "",
+    address: ""
   });
   const [editContactMode, setEditContactMode] = useState(false);
   const [contactFormData, setContactFormData] = useState({
@@ -63,7 +63,7 @@ const AdminDashboard = () => {
     variants: []
   });
 
-  // ─── AUTH CHECK (FIXED) ───
+  // ─── AUTH CHECK ───
   useEffect(() => {
     const isAdmin = localStorage.getItem("adminLoggedIn");
     if (!isAdmin) {
@@ -200,7 +200,7 @@ const AdminDashboard = () => {
     }
   };
 
-  // ─── LOAD USERS (CUSTOMERS) ───
+  // ─── LOAD USERS ───
   const loadUsers = async () => {
     try {
       const { data, error } = await supabase
@@ -297,27 +297,44 @@ const AdminDashboard = () => {
         .select('*')
         .limit(1);
       if (error && error.code !== 'PGRST116') throw error;
-      if (data && data.length > 0) {
-        const info = data[0];
-        setContactInfo({
-          phone1: info.phone1 || "+91 7060998050",
-          phone2: info.phone2 || "+91 7906396629",
-          email: info.email || "elvreofficals@gmail.com",
-          address: info.address || "1st Floor, Sangam Tent House, Jawalapur, Haridwar, Uttrakhand, 249407"
-        });
-        setContactFormData({
+
+      let info = data && data.length > 0 ? data[0] : null;
+      if (info) {
+        const loaded = {
           phone1: info.phone1 || "",
           phone2: info.phone2 || "",
           email: info.email || "",
           address: info.address || ""
-        });
+        };
+        setContactInfo(loaded);
+        setContactFormData(loaded);
+        localStorage.setItem("contactInfo", JSON.stringify(loaded));
+      } else {
+        const defaultInfo = {
+          phone1: "+91 7060998050",
+          phone2: "+91 7906396629",
+          email: "elvreofficals@gmail.com",
+          address: "1st Floor, Sangam Tent House, Jawalapur, Haridwar, Uttrakhand, 249407"
+        };
+        setContactInfo(defaultInfo);
+        setContactFormData(defaultInfo);
+        localStorage.setItem("contactInfo", JSON.stringify(defaultInfo));
       }
     } catch (err) {
       console.error('Error loading contact info:', err);
+      const fallback = {
+        phone1: "+91 7060998050",
+        phone2: "+91 7906396629",
+        email: "elvreofficals@gmail.com",
+        address: "1st Floor, Sangam Tent House, Jawalapur, Haridwar, Uttrakhand, 249407"
+      };
+      setContactInfo(fallback);
+      setContactFormData(fallback);
+      localStorage.setItem("contactInfo", JSON.stringify(fallback));
     }
   };
 
-  // ─── SAVE CONTACT INFO (UPSERT) ───
+  // ─── SAVE CONTACT INFO ───
   const saveContactInfo = async () => {
     if (!contactFormData.phone1 || !contactFormData.email || !contactFormData.address) {
       showMessage("Please fill all required fields", "error");
@@ -353,7 +370,14 @@ const AdminDashboard = () => {
       }
       if (error) throw error;
 
-      setContactInfo(contactFormData);
+      const updatedInfo = {
+        phone1: contactFormData.phone1,
+        phone2: contactFormData.phone2,
+        email: contactFormData.email,
+        address: contactFormData.address
+      };
+      setContactInfo(updatedInfo);
+      localStorage.setItem("contactInfo", JSON.stringify(updatedInfo));
       setEditContactMode(false);
       showMessage("Contact information updated successfully!", "success");
     } catch (err) {

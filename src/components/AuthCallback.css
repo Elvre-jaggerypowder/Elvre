@@ -4,7 +4,6 @@
   justify-content: center;
   min-height: 100vh;
   background: #f5f0ea;
-  font-family: 'Work Sans', sans-serif;
 }
 
 .auth-callback-loading {
@@ -12,16 +11,6 @@
   padding: 40px;
   background: white;
   border-radius: 24px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-}
-
-.auth-callback-loading h2 {
-  color: #1F3B2C;
-  margin-bottom: 8px;
-}
-
-.auth-callback-loading p {
-  color: #6b6153;
 }
 
 .auth-callback-spinner {
@@ -43,17 +32,8 @@
   padding: 40px;
   background: white;
   border-radius: 24px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
   max-width: 400px;
-}
-
-.auth-callback-error h2 {
-  color: #c0392b;
-}
-
-.auth-callback-error p {
-  color: #555;
-  margin: 12px 0 20px;
+  margin: auto;
 }
 
 .auth-callback-btn {
@@ -63,37 +43,16 @@
   border: none;
   border-radius: 30px;
   cursor: pointer;
-  font-weight: 600;
-  transition: background 0.2s;
 }
 
-.auth-callback-btn:hover {
-  background: #6d4a2e;
-}
-
-/* ─── PHONE/PASSWORD FORM ─── */
 .auth-callback-phone-form {
   background: white;
   border-radius: 24px;
   padding: 40px 35px;
   max-width: 420px;
   width: 100%;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-  text-align: center;
 }
 
-.auth-callback-phone-form h2 {
-  color: #1F3B2C;
-  margin-bottom: 8px;
-  font-family: 'Fraunces', serif;
-}
-
-.auth-callback-phone-form p {
-  color: #6b6153;
-  margin-bottom: 20px;
-}
-
-/* ─── FORM GROUP ─── */
 .auth-form-group {
   margin-bottom: 16px;
   text-align: left;
@@ -104,7 +63,6 @@
   font-size: 14px;
   font-weight: 600;
   color: #1F3B2C;
-  margin-bottom: 6px;
 }
 
 .auth-form-group input {
@@ -113,20 +71,10 @@
   border: 1px solid #e0d6c8;
   border-radius: 12px;
   font-size: 16px;
-  background: #faf8f5;
-  transition: border 0.2s;
-  box-sizing: border-box;
 }
 
-.auth-form-group input:focus {
-  outline: none;
-  border-color: #8B5E3C;
-}
-
-/* ─── PASSWORD WRAPPER (eye button) ─── */
 .password-input-wrapper {
   position: relative;
-  width: 100%;
 }
 
 .password-input-wrapper input {
@@ -143,20 +91,8 @@
   cursor: pointer;
   font-size: 18px;
   color: #8B5E3C;
-  padding: 4px;
-  transition: color 0.2s;
 }
 
-.password-toggle-btn:hover {
-  color: #6d4a2e;
-}
-
-.password-toggle-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* ─── SUBMIT BUTTON ─── */
 .auth-callback-phone-form button[type="submit"] {
   width: 100%;
   padding: 14px;
@@ -167,17 +103,11 @@
   font-weight: 600;
   font-size: 16px;
   cursor: pointer;
-  transition: background 0.2s;
   margin-top: 8px;
 }
 
-.auth-callback-phone-form button[type="submit"]:hover:not(:disabled) {
+.auth-callback-phone-form button[type="submit"]:hover {
   background: #6d4a2e;
-}
-
-.auth-callback-phone-form button[type="submit"]:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 .auth-callback-skip {

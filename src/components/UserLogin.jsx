@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import { supabase } from "../supabaseClient";
-import { FaEye, FaEyeSlash } from 'react-icons/fa'; 
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import "./UserLogin.css";
 
-// ─── SocialRow (Google only) ────────────────────────
+// ─── Google button row ───────────────────────────────
 const SocialRow = ({ socialLoading, onSocial }) => (
   <>
     <div className="auth-divider">
@@ -26,12 +26,11 @@ const SocialRow = ({ socialLoading, onSocial }) => (
         </svg>
         {socialLoading.google ? "Loading..." : "Google"}
       </button>
-      {/* Facebook button removed */}
     </div>
   </>
 );
 
-// ─── BranchMotif ─────────────────────────────────────
+// ─── Decorative branch motif ─────────────────────────
 const BranchMotif = ({ animKey }) => (
   <svg key={animKey} className="auth-branch-svg" viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
     <path d="M20 130 C 40 100, 45 80, 40 55 C 55 65, 70 60, 75 40 C 85 55, 100 55, 110 35" />
@@ -43,7 +42,9 @@ const BranchMotif = ({ animKey }) => (
   </svg>
 );
 
-// ─── MAIN COMPONENT ──────────────────────────────────
+const LOGIN_BLOCK_KEY = "loginBlockUntil";
+const LOGIN_ATTEMPTS_KEY = "loginAttempts";
+
 const UserLogin = () => {
   const [mode, setMode] = useState("login");
   const [animKey, setAnimKey] = useState(0);
@@ -57,21 +58,48 @@ const UserLogin = () => {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [showSignupConfirm, setShowSignupConfirm] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState({ google: false });
-  const [loginAttempts, setLoginAttempts] = useState(0);
-  const [isBlocked, setIsBlocked] = useState(false);
-  
+
+  const [loginAttempts, setLoginAttempts] = useState(() => Number(localStorage.getItem(LOGIN_ATTEMPTS_KEY)) || 0);
+  const [isBlocked, setIsBlocked] = useState(() => {
+    const until = Number(localStorage.getItem(LOGIN_BLOCK_KEY));
+    return !!until && until > Date.now();
+  });
+
   const [resetMessage, setResetMessage] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
   const navigate = useNavigate();
 
-  const ADMIN_EMAIL = process.env.REACT_APP_ADMIN_EMAIL || "elvreofficial@gmail.com";
+  // ─── ✅ FIXED: Admin credentials (fallback + env override) ───
+  const ADMIN_EMAIL = process.env.REACT_APP_ADMIN_EMAIL || "elvreofficals@gmail.com";
   const ADMIN_PASSWORD = process.env.REACT_APP_ADMIN_PASSWORD || "Elvre@2024";
 
-  // Session timeout for regular users
+  // Auto-unblock once the 5-minute window (persisted in localStorage) has passed.
+  useEffect(() => {
+    if (!isBlocked) return;
+    const until = Number(localStorage.getItem(LOGIN_BLOCK_KEY));
+    const remaining = until - Date.now();
+    const clearBlock = () => {
+      setIsBlocked(false);
+      setLoginAttempts(0);
+      localStorage.removeItem(LOGIN_BLOCK_KEY);
+      localStorage.removeItem(LOGIN_ATTEMPTS_KEY);
+    };
+    if (remaining <= 0) {
+      clearBlock();
+      return;
+    }
+    const timer = setTimeout(clearBlock, remaining);
+    return () => clearTimeout(timer);
+  }, [isBlocked]);
+
+  // Session timeout for regular users while sitting on this page
   useEffect(() => {
     const timer = setTimeout(() => {
       if (localStorage.getItem("currentUser") && !localStorage.getItem("adminLoggedIn")) {
@@ -83,16 +111,27 @@ const UserLogin = () => {
     return () => clearTimeout(timer);
   }, [navigate]);
 
+  // Supabase fires PASSWORD_RECOVERY when the user opens their reset-password
+  // email link — switch this page into "set new password" mode.
+  useEffect(() => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setError("");
+        setResetMessage("");
+        setMode("reset");
+      }
+    });
+    return () => listener?.subscription?.unsubscribe();
+  }, []);
+
   const switchMode = (next) => {
     setError("");
     setResetMessage("");
     setMode(next);
     setAnimKey((k) => k + 1);
-    setLoginAttempts(0);
-    setIsBlocked(false);
   };
 
-  // ── FORGOT PASSWORD ──
+  // ── Send password reset email ──
   const handleForgotPassword = async () => {
     setError("");
     setResetMessage("");
@@ -101,7 +140,6 @@ const UserLogin = () => {
       setError("Please enter your email address first.");
       return;
     }
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError("Please enter a valid email address.");
@@ -111,15 +149,13 @@ const UserLogin = () => {
     setLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/login',
+        redirectTo: window.location.origin,
       });
-
       if (error) {
         setError(error.message || "Failed to send reset email.");
         setLoading(false);
         return;
       }
-
       setResetMessage(`✅ Password reset link sent to ${email}. Please check your email (and spam folder).`);
       setLoading(false);
     } catch (err) {
@@ -128,7 +164,40 @@ const UserLogin = () => {
     }
   };
 
-  // ── LOGIN ──────────────────────────────────────────
+  // ── Set new password after clicking the reset link ──
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    if (newPassword.trim().length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (newPassword.trim() !== confirmNewPassword.trim()) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword.trim() });
+      if (error) {
+        setError(error.message || "Failed to update password.");
+        setLoading(false);
+        return;
+      }
+      setLoading(false);
+      alert("Password updated! Please log in with your new password.");
+      setNewPassword("");
+      setConfirmNewPassword("");
+      switchMode("login");
+    } catch (err) {
+      setError("Something went wrong. Please try again.");
+      setLoading(false);
+    }
+  };
+
+  // ── Email + password login ──
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
@@ -142,21 +211,20 @@ const UserLogin = () => {
     const trimmedEmail = email.trim();
     const trimmedPassword = password.trim();
 
-    // ─── ADMIN CHECK (with Supabase Auth) ───
+    // ─── Admin check ───
     if (trimmedEmail === ADMIN_EMAIL && trimmedPassword === ADMIN_PASSWORD) {
       setLoading(true);
       try {
-        const { data, error: authError } = await supabase.auth.signInWithPassword({
+        // Use Supabase Auth to create a session so RLS policies work
+        const { error: authError } = await supabase.auth.signInWithPassword({
           email: trimmedEmail,
           password: trimmedPassword,
         });
-
         if (authError) {
           setError("Admin user not found in Auth. Please sign up once with this email or create in Supabase Dashboard.");
           setLoading(false);
           return;
         }
-
         localStorage.setItem("adminLoggedIn", "true");
         localStorage.setItem("adminEmail", trimmedEmail);
         setLoading(false);
@@ -169,7 +237,7 @@ const UserLogin = () => {
       }
     }
 
-    // ─── REGULAR USER LOGIN ───
+    // ─── Regular user login ───
     setLoading(true);
     try {
       const { data, error: authError } = await supabase.auth.signInWithPassword({
@@ -179,13 +247,13 @@ const UserLogin = () => {
 
       if (authError) {
         setError("Invalid credentials. Please try again.");
-        setLoginAttempts(prev => prev + 1);
-        if (loginAttempts + 1 >= 5) {
+        const nextAttempts = loginAttempts + 1;
+        setLoginAttempts(nextAttempts);
+        localStorage.setItem(LOGIN_ATTEMPTS_KEY, String(nextAttempts));
+        if (nextAttempts >= 5) {
+          const until = Date.now() + 5 * 60 * 1000;
+          localStorage.setItem(LOGIN_BLOCK_KEY, String(until));
           setIsBlocked(true);
-          setTimeout(() => {
-            setIsBlocked(false);
-            setLoginAttempts(0);
-          }, 5 * 60 * 1000);
         }
         setLoading(false);
         return;
@@ -204,11 +272,14 @@ const UserLogin = () => {
           email: data.user.email,
           phone: userData?.phone || "",
         };
-        
+
         localStorage.setItem("currentUser", JSON.stringify(userInfo));
         localStorage.removeItem("adminLoggedIn");
         localStorage.setItem("sessionExpiry", Date.now() + 30 * 60 * 1000);
-        
+        localStorage.removeItem(LOGIN_ATTEMPTS_KEY);
+        localStorage.removeItem(LOGIN_BLOCK_KEY);
+        setLoginAttempts(0);
+
         setLoading(false);
         const redirectTo = localStorage.getItem("redirectAfterLogin") || "/";
         localStorage.removeItem("redirectAfterLogin");
@@ -223,7 +294,7 @@ const UserLogin = () => {
     }
   };
 
-  // ── SIGNUP ─────────────────────────────────────────
+  // ── Email + password signup ──
   const handleSignup = async (e) => {
     e.preventDefault();
     setError("");
@@ -241,7 +312,6 @@ const UserLogin = () => {
       setError("Passwords do not match.");
       return;
     }
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(trimmedEmail)) {
       setError("Please enter a valid email address.");
@@ -265,7 +335,6 @@ const UserLogin = () => {
       }
 
       if (data?.user) {
-        // Trigger will create the row in users table.
         setLoading(false);
         alert("Account created! Please check your email to verify.");
         navigate("/login");
@@ -279,26 +348,25 @@ const UserLogin = () => {
     }
   };
 
-  // ── SOCIAL LOGIN ──
+  // ── Google sign-in ──
   const handleSocialLogin = async (provider) => {
     setSocialLoading((s) => ({ ...s, [provider]: true }));
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: provider,
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
         options: {
-          redirectTo:'https://elvre.in',
+          redirectTo: window.location.origin,
         },
       });
       if (error) throw error;
+      // Browser navigates away to Google here — no further code runs.
     } catch (err) {
       console.error("Social login error:", err);
       alert("Failed to login with " + provider);
-    } finally {
       setSocialLoading((s) => ({ ...s, [provider]: false }));
     }
   };
 
-  // ─── RENDER ────────────────────────────────────────
   return (
     <>
       <Navbar />
@@ -308,205 +376,261 @@ const UserLogin = () => {
         <svg className="leaf-particle" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C7 2 3 6 3 11c0 6 9 11 9 11s9-5 9-11c0-5-4-9-9-9z"/></svg>
         <svg className="leaf-particle" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C7 2 3 6 3 11c0 6 9 11 9 11s9-5 9-11c0-5-4-9-9-9z"/></svg>
 
-        <div className={`auth-card mode-${mode}`}>
-          {/* ============ LOGIN PANEL ============ */}
-          <div className={`auth-form-panel ${mode !== "login" ? "is-hidden" : ""}`}>
-            <img src={`${process.env.PUBLIC_URL}/assets/ELVRElogo1.png`} alt="ELVRE" className="auth-logo" />
-            <div className="auth-eyebrow">Elvre · Member Login</div>
-            <h2>Welcome Back!</h2>
-            <p className="auth-sub">Login to your account</p>
+        {mode === "reset" ? (
+          <div className="auth-card mode-login">
+            <div className="auth-form-panel">
+              <img src={`${process.env.PUBLIC_URL}/assets/ELVRElogo1.png`} alt="ELVRE" className="auth-logo" />
+              <div className="auth-eyebrow">Elvre · Reset Password</div>
+              <h2>Choose a New Password</h2>
+              <p className="auth-sub">Enter and confirm your new password below.</p>
 
-            {mode === "login" && error && <div className="auth-error">{error}</div>}
-            {resetMessage && <div className="auth-success" style={{background: '#e8f5e9', color: '#2e7d32', padding: '10px', borderRadius: '8px', marginBottom: '15px'}}>{resetMessage}</div>}
+              {error && <div className="auth-error">{error}</div>}
 
-            <form onSubmit={handleLogin}>
-              <div className="auth-field">
-                <label>Email Address</label>
-                <input 
-                  type="email" 
-                  value={email} 
-                  onChange={(e) => setEmail(e.target.value)} 
-                  placeholder="Enter your email" 
-                  required 
-                  disabled={loading || isBlocked}
-                  maxLength={100}
-                />
-              </div>
-              
-              <div className="auth-field">
-                <label>Password</label>
-                <div className="password-input-wrapper">
-                  <input
-                    type={showLoginPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
-                    required
-                    disabled={loading || isBlocked}
-                  />
-                  <button
-                    type="button"
-                    className="password-toggle-btn"
-                    onClick={() => setShowLoginPassword(!showLoginPassword)}
-                    disabled={loading || isBlocked}
-                  >
-                    {showLoginPassword ? <FaEyeSlash /> : <FaEye />}
-                  </button>
+              <form onSubmit={handleResetPassword}>
+                <div className="auth-field">
+                  <label>New Password (min 8 chars)</label>
+                  <div className="password-input-wrapper">
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Enter new password"
+                      required
+                      disabled={loading}
+                      minLength={8}
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle-btn"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      disabled={loading}
+                    >
+                      {showNewPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  </div>
                 </div>
-              </div>
-
-              <div style={{ textAlign: 'right', marginTop: '-8px', marginBottom: '15px' }}>
-                <button 
-                  type="button" 
-                  onClick={handleForgotPassword} 
-                  disabled={loading || isBlocked}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--primary-brown)',
-                    textDecoration: 'underline',
-                    cursor: 'pointer',
-                    fontSize: '0.9rem',
-                    fontWeight: '500'
-                  }}
-                >
-                  Forgot Password?
+                <div className="auth-field">
+                  <label>Confirm New Password</label>
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    placeholder="Re-enter new password"
+                    required
+                    disabled={loading}
+                  />
+                </div>
+                <button type="submit" className="auth-submit" disabled={loading}>
+                  {loading ? "Updating..." : "Update Password"}
                 </button>
-              </div>
-
-              <button 
-                type="submit" 
-                className="auth-submit" 
-                disabled={loading || isBlocked}
-              >
-                {loading ? "Logging in..." : isBlocked ? "Blocked (5 min)" : "Login"}
-              </button>
-            </form>
-
-            <SocialRow socialLoading={socialLoading} onSocial={handleSocialLogin} />
-
-            <p className="auth-switch-line">
-              Don't have an account?
-              <button type="button" onClick={() => switchMode("signup")}>Sign Up</button>
-            </p>
-            <p className="auth-admin-note">🔐 Admin Access: Use provided credentials</p>
-          </div>
-
-          {/* ============ SIGNUP PANEL ============ */}
-          <div className={`auth-form-panel ${mode !== "signup" ? "is-hidden" : ""}`}>
-            <img src={`${process.env.PUBLIC_URL}/assets/ELVRElogo1.png`} alt="ELVRE" className="auth-logo" />
-            <div className="auth-eyebrow">Elvre · New Here</div>
-            <h2>Join the Grove</h2>
-            <p className="auth-sub">Create your account to get started</p>
-
-            {mode === "signup" && error && <div className="auth-error">{error}</div>}
-
-            <form onSubmit={handleSignup}>
-              <div className="auth-field">
-                <label>Full Name</label>
-                <input 
-                  type="text" 
-                  value={name} 
-                  onChange={(e) => setName(e.target.value)} 
-                  placeholder="Enter your name" 
-                  required 
-                  disabled={loading}
-                  maxLength={50}
-                />
-              </div>
-              <div className="auth-field">
-                <label>Email Address</label>
-                <input 
-                  type="email" 
-                  value={email} 
-                  onChange={(e) => setEmail(e.target.value)} 
-                  placeholder="Enter your email" 
-                  required 
-                  disabled={loading}
-                  maxLength={100}
-                />
-              </div>
-              
-              <div className="auth-field">
-                <label>Password (min 8 chars)</label>
-                <div className="password-input-wrapper">
-                  <input
-                    type={showSignupPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Create a password"
-                    required
-                    disabled={loading}
-                    minLength={8}
-                  />
-                  <button
-                    type="button"
-                    className="password-toggle-btn"
-                    onClick={() => setShowSignupPassword(!showSignupPassword)}
-                    disabled={loading}
-                  >
-                    {showSignupPassword ? <FaEyeSlash /> : <FaEye />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="auth-field">
-                <label>Confirm Password</label>
-                <div className="password-input-wrapper">
-                  <input
-                    type={showSignupConfirm ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Re-enter your password"
-                    required
-                    disabled={loading}
-                  />
-                  <button
-                    type="button"
-                    className="password-toggle-btn"
-                    onClick={() => setShowSignupConfirm(!showSignupConfirm)}
-                    disabled={loading}
-                  >
-                    {showSignupConfirm ? <FaEyeSlash /> : <FaEye />}
-                  </button>
-                </div>
-              </div>
-
-              <button 
-                type="submit" 
-                className="auth-submit" 
-                disabled={loading}
-              >
-                {loading ? "Creating account..." : "Sign Up"}
-              </button>
-            </form>
-
-            <SocialRow socialLoading={socialLoading} onSocial={handleSocialLogin} />
-
-            <p className="auth-switch-line">
-              Already have an account?
-              <button type="button" onClick={() => switchMode("login")}>Login</button>
-            </p>
-          </div>
-
-          {/* ============ SLIDING OVERLAY ============ */}
-          <div className="auth-overlay-track">
-            <div className="auth-overlay">
-              <img src={`${process.env.PUBLIC_URL}/assets/ELVRElogo1.png`} alt="ELVRE" className="auth-overlay-logo" />
-              <BranchMotif animKey={animKey} />
-              <div className="auth-overlay-eyebrow">{mode === "login" ? "New to Elvre?" : "One of us already?"}</div>
-              <h3>{mode === "login" ? "Grow something\nnew with us" : "Good to see\nyou again"}</h3>
-              <p>
-                {mode === "login"
-                  ? "Create an account and start your journey through the grove — it only takes a minute."
-                  : "Sign back in to pick up right where you left off."}
-              </p>
-              <button type="button" className="auth-overlay-btn" onClick={() => switchMode(mode === "login" ? "signup" : "login")}>
-                {mode === "login" ? "Sign Up" : "Login"}
-              </button>
+              </form>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className={`auth-card mode-${mode}`}>
+            {/* Login Panel */}
+            <div className={`auth-form-panel ${mode !== "login" ? "is-hidden" : ""}`}>
+              <img src={`${process.env.PUBLIC_URL}/assets/ELVRElogo1.png`} alt="ELVRE" className="auth-logo" />
+              <div className="auth-eyebrow">Elvre · Member Login</div>
+              <h2>Welcome Back!</h2>
+              <p className="auth-sub">Login to your account</p>
+
+              {mode === "login" && error && <div className="auth-error">{error}</div>}
+              {resetMessage && (
+                <div className="auth-success" style={{ background: "#e8f5e9", color: "#2e7d32", padding: "10px", borderRadius: "8px", marginBottom: "15px" }}>
+                  {resetMessage}
+                </div>
+              )}
+
+              <form onSubmit={handleLogin}>
+                <div className="auth-field">
+                  <label>Email Address</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    required
+                    disabled={loading || isBlocked}
+                    maxLength={100}
+                  />
+                </div>
+
+                <div className="auth-field">
+                  <label>Password</label>
+                  <div className="password-input-wrapper">
+                    <input
+                      type={showLoginPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      required
+                      disabled={loading || isBlocked}
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle-btn"
+                      onClick={() => setShowLoginPassword(!showLoginPassword)}
+                      disabled={loading || isBlocked}
+                    >
+                      {showLoginPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ textAlign: "right", marginTop: "-8px", marginBottom: "15px" }}>
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    disabled={loading || isBlocked}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "var(--primary-brown)",
+                      textDecoration: "underline",
+                      cursor: "pointer",
+                      fontSize: "0.9rem",
+                      fontWeight: "500",
+                    }}
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+
+                <button type="submit" className="auth-submit" disabled={loading || isBlocked}>
+                  {loading ? "Logging in..." : isBlocked ? "Blocked (5 min)" : "Login"}
+                </button>
+              </form>
+
+              <SocialRow socialLoading={socialLoading} onSocial={handleSocialLogin} />
+
+              <p className="auth-switch-line">
+                Don't have an account?
+                <button type="button" onClick={() => switchMode("signup")}>Sign Up</button>
+              </p>
+            </div>
+
+            {/* Signup Panel */}
+            <div className={`auth-form-panel ${mode !== "signup" ? "is-hidden" : ""}`}>
+              <img src={`${process.env.PUBLIC_URL}/assets/ELVRElogo1.png`} alt="ELVRE" className="auth-logo" />
+              <div className="auth-eyebrow">Elvre · New Here</div>
+              <h2>Join the Grove</h2>
+              <p className="auth-sub">Create your account to get started</p>
+
+              {mode === "signup" && error && <div className="auth-error">{error}</div>}
+
+              <form onSubmit={handleSignup}>
+                <div className="auth-field">
+                  <label>Full Name</label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter your name"
+                    required
+                    disabled={loading}
+                    maxLength={50}
+                  />
+                </div>
+                <div className="auth-field">
+                  <label>Email Address</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    required
+                    disabled={loading}
+                    maxLength={100}
+                  />
+                </div>
+                <div className="auth-field">
+                  <label>Phone Number</label>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+                    placeholder="Enter your phone number"
+                    maxLength={10}
+                    disabled={loading}
+                  />
+                </div>
+                <div className="auth-field">
+                  <label>Password (min 8 chars)</label>
+                  <div className="password-input-wrapper">
+                    <input
+                      type={showSignupPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Create a password"
+                      required
+                      disabled={loading}
+                      minLength={8}
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle-btn"
+                      onClick={() => setShowSignupPassword(!showSignupPassword)}
+                      disabled={loading}
+                    >
+                      {showSignupPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  </div>
+                </div>
+                <div className="auth-field">
+                  <label>Confirm Password</label>
+                  <div className="password-input-wrapper">
+                    <input
+                      type={showSignupConfirm ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Re-enter your password"
+                      required
+                      disabled={loading}
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle-btn"
+                      onClick={() => setShowSignupConfirm(!showSignupConfirm)}
+                      disabled={loading}
+                    >
+                      {showSignupConfirm ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  </div>
+                </div>
+
+                <button type="submit" className="auth-submit" disabled={loading}>
+                  {loading ? "Creating account..." : "Sign Up"}
+                </button>
+              </form>
+
+              <SocialRow socialLoading={socialLoading} onSocial={handleSocialLogin} />
+
+              <p className="auth-switch-line">
+                Already have an account?
+                <button type="button" onClick={() => switchMode("login")}>Login</button>
+              </p>
+            </div>
+
+            {/* Overlay */}
+            <div className="auth-overlay-track">
+              <div className="auth-overlay">
+                <img src={`${process.env.PUBLIC_URL}/assets/ELVRElogo1.png`} alt="ELVRE" className="auth-overlay-logo" />
+                <BranchMotif animKey={animKey} />
+                <div className="auth-overlay-eyebrow">{mode === "login" ? "New to Elvre?" : "One of us already?"}</div>
+                <h3>{mode === "login" ? "Grow something\nnew with us" : "Good to see\nyou again"}</h3>
+                <p>
+                  {mode === "login"
+                    ? "Create an account and start your journey through the grove — it only takes a minute."
+                    : "Sign back in to pick up right where you left off."}
+                </p>
+                <button type="button" className="auth-overlay-btn" onClick={() => switchMode(mode === "login" ? "signup" : "login")}>
+                  {mode === "login" ? "Sign Up" : "Login"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

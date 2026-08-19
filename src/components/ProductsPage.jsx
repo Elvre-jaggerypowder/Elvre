@@ -407,7 +407,7 @@ const ProductsPage = () => {
                           <span className={`product-badge ${product.badge.toLowerCase()}`}>{product.badge}</span>
                         )}
                         <div className="product-image">
-                          <img src={product.image || "/assets/jaggery.png"} alt={product.name} />
+                          <img src={product.image || "/assets/jaggery.png"} onError={(e) => { e.target.src = "/assets/jaggery.png"; }} alt={product.name} />
                           {/* ✅ Quick View overlay REMOVED – no overlay */}
                         </div>
                         <div className="product-info">

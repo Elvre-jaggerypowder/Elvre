@@ -13,12 +13,14 @@ const Contact = () => {
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  const [contactInfo] = useState({
-    phone1: "+91 7060998050",
-    phone2: "+91 7906396629",
-    email: "elvreofficals@gmail.com",
-    address: "1st Floor, Sangam Tent House, Jawalapur, Haridwar, Uttrakhand, 249407"
+  // ─── CONTACT INFO STATE (dynamic, not hardcoded) ───
+  const [contactInfo, setContactInfo] = useState({
+    phone1: "",
+    phone2: "",
+    email: "",
+    address: ""
   });
+  const [infoLoading, setInfoLoading] = useState(true);
 
   const categories = [
     { value: "general", label: "General Feedback", icon: "💬" },
@@ -29,9 +31,75 @@ const Contact = () => {
     { value: "suggestion", label: "Suggestion / Idea", icon: "💡" }
   ];
 
+  // ─── LOAD CONTACT INFO (localStorage → Supabase) ───
+  const loadContactInfo = async () => {
+    setInfoLoading(true);
+    try {
+      // 1️⃣ First try localStorage (fast, reflects admin updates)
+      const local = localStorage.getItem("contactInfo");
+      if (local) {
+        try {
+          const parsed = JSON.parse(local);
+          setContactInfo(parsed);
+          setInfoLoading(false);
+          return;
+        } catch (e) {
+          console.error("Error parsing localStorage contact info:", e);
+        }
+      }
+
+      // 2️⃣ If no localStorage, fetch from Supabase
+      const { data, error } = await supabase
+        .from('contact_info')
+        .select('*')
+        .limit(1);
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching contact info:', error);
+        // fallback to default
+        setDefaultContact();
+        setInfoLoading(false);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        const info = data[0];
+        const loaded = {
+          phone1: info.phone1 || "",
+          phone2: info.phone2 || "",
+          email: info.email || "",
+          address: info.address || ""
+        };
+        setContactInfo(loaded);
+        localStorage.setItem("contactInfo", JSON.stringify(loaded));
+      } else {
+        // 3️⃣ No data in Supabase → use defaults
+        setDefaultContact();
+      }
+    } catch (err) {
+      console.error("Error loading contact info:", err);
+      setDefaultContact();
+    } finally {
+      setInfoLoading(false);
+    }
+  };
+
+  const setDefaultContact = () => {
+    const defaultInfo = {
+      phone1: "+91 7060998050",
+      phone2: "+91 7906396629",
+      email: "elvreofficals@gmail.com",
+      address: "1st Floor, Sangam Tent House, Jawalapur, Haridwar, Uttrakhand, 249407"
+    };
+    setContactInfo(defaultInfo);
+    localStorage.setItem("contactInfo", JSON.stringify(defaultInfo));
+  };
+
   useEffect(() => {
+    loadContactInfo();
     loadFeedbacks();
 
+    // ─── Realtime feedback subscription ───
     const subscription = supabase
       .channel('contact-feedbacks')
       .on('postgres_changes', 
@@ -50,6 +118,7 @@ const Contact = () => {
     };
   }, []);
 
+  // ─── LOAD FEEDBACKS ───
   const loadFeedbacks = async () => {
     setLoading(true);
     try {
@@ -95,14 +164,12 @@ const Contact = () => {
       return;
     }
 
-    // ✅ Only columns that exist in the table
     const newFeedback = {
       name: formData.name,
       message: formData.message,
       category: formData.category,
       rating: formData.rating,
       created_at: new Date().toISOString()
-      // ⚠️ 'email' is NOT in the table, so we exclude it
     };
 
     try {
@@ -112,13 +179,12 @@ const Contact = () => {
       
       if (error) {
         console.error('❌ Supabase insert error:', error);
-        console.error('❌ Error details:', error.message);
         // Fallback to localStorage
         const cached = JSON.parse(localStorage.getItem("feedbacks") || "[]");
         const fake = { id: Date.now(), ...newFeedback };
         localStorage.setItem("feedbacks", JSON.stringify([fake, ...cached]));
         setFeedbacks(prev => [fake, ...prev]);
-        setStatus("⚠️ Saved locally (Supabase error: " + error.message + ")");
+        setStatus("⚠️ Saved locally (Supabase error)");
         setTimeout(() => setStatus(""), 4000);
         return;
       }
@@ -134,6 +200,10 @@ const Contact = () => {
       setTimeout(() => setStatus(""), 3000);
     }
   };
+
+  if (infoLoading) {
+    return <div className="contact-loading">Loading contact info...</div>;
+  }
 
   return (
     <section className="contact-section" id="contact">
@@ -153,7 +223,7 @@ const Contact = () => {
                 <div>
                   <h4>Phone</h4>
                   <p className="contact-phone">{contactInfo.phone1}</p>
-                  <p className="contact-phone">{contactInfo.phone2}</p>
+                  {contactInfo.phone2 && <p className="contact-phone">{contactInfo.phone2}</p>}
                 </div>
               </div>
               <div className="contact-info-item">
@@ -178,7 +248,6 @@ const Contact = () => {
             <p className="form-subtitle">Help us serve you better</p>
 
             <form onSubmit={handleSubmit}>
-              {/* Rating */}
               <div className="form-group rating-group">
                 <label>How was your experience? <span className="required">*</span></label>
                 <div className="rating-stars">
@@ -202,7 +271,6 @@ const Contact = () => {
                 </div>
               </div>
 
-              {/* Category */}
               <div className="form-group">
                 <label>Feedback Category</label>
                 <select
@@ -219,7 +287,6 @@ const Contact = () => {
                 </select>
               </div>
 
-              {/* Name */}
               <div className="form-group">
                 <label>Your Name <span className="required">*</span></label>
                 <input
@@ -232,9 +299,6 @@ const Contact = () => {
                 />
               </div>
 
-              {/* Email is removed – not stored */}
-
-              {/* Message */}
               <div className="form-group">
                 <label>Your Message <span className="required">*</span></label>
                 <textarea
@@ -260,7 +324,6 @@ const Contact = () => {
           </div>
         </div>
 
-        {/* Recent Feedbacks */}
         {feedbacks.length > 0 && (
           <div className="recent-feedbacks">
             <h3>Recent Feedback</h3>

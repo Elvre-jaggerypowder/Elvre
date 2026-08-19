@@ -41,7 +41,7 @@ import WhatsApp from "./components/WhatsApp";
 import Chatbot from "./components/Chatbot";
 
 // ============================================
-// Protected Route Component
+// Protected Route
 // ============================================
 const ProtectedRoute = ({ children }) => {
   const isLoggedIn = localStorage.getItem("currentUser");
@@ -53,7 +53,7 @@ const ProtectedRoute = ({ children }) => {
 };
 
 // ============================================
-// LAYOUT Component
+// Layout
 // ============================================
 const Layout = ({ children, isChatbotOpen, setIsChatbotOpen }) => (
   <>
@@ -66,6 +66,34 @@ const Layout = ({ children, isChatbotOpen, setIsChatbotOpen }) => (
     <BackToTop />
   </>
 );
+
+// ============================================
+// Root Handler – detects a Google/OAuth redirect landing on "/"
+//
+// IMPORTANT: this app uses HashRouter, so all in-app routes live after
+// the "#" (e.g. yoursite.com/#/login). But Supabase's OAuth redirect
+// appends its own params to the REAL browser URL, BEFORE the "#":
+//   yoursite.com/?code=xxxxx&state=xxxxx#/
+// react-router's useSearchParams() only reads what's inside the hash, so
+// it would never see "code" here. We read window.location.search
+// directly instead — that's the actual query string Supabase wrote.
+// ============================================
+const RootHandler = ({ isChatbotOpen, setIsChatbotOpen }) => {
+  const [isAuthCallback, setIsAuthCallback] = useState(() => {
+    const realQuery = new URLSearchParams(window.location.search);
+    return Boolean(realQuery.get("code"));
+  });
+
+  if (isAuthCallback) {
+    return <AuthCallback />;
+  }
+
+  return (
+    <Layout isChatbotOpen={isChatbotOpen} setIsChatbotOpen={setIsChatbotOpen}>
+      <Home />
+    </Layout>
+  );
+};
 
 // ============================================
 // Main App
@@ -92,15 +120,12 @@ function App() {
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/admin" element={<Navigate to="/login" replace />} />
 
-              {/* Public Routes */}
+              {/* Root route – handles both Home and the Google OAuth redirect */}
               <Route
                 path="/"
-                element={
-                  <Layout isChatbotOpen={isChatbotOpen} setIsChatbotOpen={setIsChatbotOpen}>
-                    <Home />
-                  </Layout>
-                }
+                element={<RootHandler isChatbotOpen={isChatbotOpen} setIsChatbotOpen={setIsChatbotOpen} />}
               />
+
               <Route
                 path="/products"
                 element={
@@ -174,7 +199,6 @@ function App() {
                 }
               />
 
-              {/* Auth Routes */}
               <Route
                 path="/login"
                 element={
@@ -192,7 +216,6 @@ function App() {
                 }
               />
 
-              {/* Protected Routes */}
               <Route
                 path="/my-orders"
                 element={
