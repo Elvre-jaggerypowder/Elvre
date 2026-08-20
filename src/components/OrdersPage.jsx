@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Navbar from "./Navbar";
+import { supabase } from "../supabaseClient";
 import { generateOrderInvoice } from '../services/invoiceService';
 import "./OrdersPage.css";
 
@@ -14,29 +15,77 @@ const OrdersPage = () => {
   const [cancelOrderId, setCancelOrderId] = useState(null);
   const [message, setMessage] = useState("");
   const [downloadingId, setDownloadingId] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    checkUserAndLoadOrders();
-  }, []);
-
-  const checkUserAndLoadOrders = () => {
-    const user = localStorage.getItem("currentUser");
+    const user = JSON.parse(localStorage.getItem("currentUser"));
     if (!user) {
+      localStorage.setItem("redirectAfterLogin", "/my-orders");
       navigate("/login");
       return;
     }
-    loadOrders();
+    setCurrentUser(user);
+    loadOrders(user.email);
+  }, [navigate]);
+
+  // ─── LOAD ORDERS FROM SUPABASE + LOCALSTORAGE FALLBACK ───
+  const loadOrders = async (email) => {
+    setLoading(true);
+    try {
+      // 1️⃣ Try Supabase
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("email", email)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("❌ Supabase orders error:", error);
+        // fallback to localStorage
+        const localOrders = getLocalOrders(email);
+        setOrders(localOrders);
+        setLoading(false);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        // Sort by created_at descending (latest first)
+        const sorted = data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        setOrders(sorted);
+        // Update localStorage cache
+        localStorage.setItem(`orders_${email}`, JSON.stringify(sorted));
+      } else {
+        // No orders in Supabase – try localStorage
+        const localOrders = getLocalOrders(email);
+        setOrders(localOrders);
+      }
+    } catch (err) {
+      console.error("❌ Error loading orders:", err);
+      const localOrders = getLocalOrders(email);
+      setOrders(localOrders);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const loadOrders = () => {
+  // ─── GET ORDERS FROM LOCALSTORAGE (backup) ───
+  const getLocalOrders = (email) => {
+    try {
+      // First try user-specific cache
+      const stored = localStorage.getItem(`orders_${email}`);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error("Error parsing local orders:", e);
+    }
+    // Fallback to global elvreOrders
     const allOrders = JSON.parse(localStorage.getItem("elvreOrders") || "[]");
-    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-    const userOrders = allOrders.filter(order => order.email === currentUser?.email);
-    userOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-    setOrders(userOrders);
-    setLoading(false);
+    return allOrders.filter(o => o.email === email);
   };
 
+  // ─── HELPER FUNCTIONS ───
   const getStatusBadgeClass = (status) => {
     switch (status) {
       case "pending": return "status-pending";
@@ -64,12 +113,30 @@ const OrdersPage = () => {
     setShowCancelModal(true);
   };
 
-  const confirmCancelOrder = () => {
-    if (cancelOrderId) {
+  // ─── CANCEL ORDER (updates both Supabase and localStorage) ───
+  const confirmCancelOrder = async () => {
+    if (!cancelOrderId) return;
+
+    try {
+      // 1️⃣ Update in Supabase
+      const { error } = await supabase
+        .from("orders")
+        .update({ status: "cancelled" })
+        .eq("id", cancelOrderId);
+
+      if (error) {
+        console.error("❌ Supabase update error:", error);
+        // Still update locally even if Supabase fails
+      } else {
+        console.log("✅ Order cancelled in Supabase");
+      }
+
+      // 2️⃣ Update local orders
       const allOrders = JSON.parse(localStorage.getItem("elvreOrders") || "[]");
       const cancelledOrder = allOrders.find(order => order.id === cancelOrderId);
       
       if (cancelledOrder && cancelledOrder.products && cancelledOrder.status !== "cancelled") {
+        // Restore stock
         const allProducts = JSON.parse(localStorage.getItem("elvreProducts") || "[]");
         const updatedProducts = allProducts.map(product => {
           const cancelledItem = cancelledOrder.products.find(item => item.id === product.id);
@@ -87,11 +154,17 @@ const OrdersPage = () => {
         order.id === cancelOrderId ? { ...order, status: "cancelled", canCancel: false } : order
       );
       localStorage.setItem("elvreOrders", JSON.stringify(updatedOrders));
-      loadOrders();
+
+      // 3️⃣ Refresh orders
+      loadOrders(currentUser.email);
       setMessage("Order cancelled successfully! Stock has been updated.");
       setShowCancelModal(false);
       setCancelOrderId(null);
       setTimeout(() => setMessage(""), 3000);
+    } catch (err) {
+      console.error("❌ Cancel error:", err);
+      alert("Failed to cancel order. Please try again.");
+      setShowCancelModal(false);
     }
   };
 
@@ -104,7 +177,6 @@ const OrdersPage = () => {
     navigate(`/order-tracking/${orderId}`);
   };
 
-  // ✅ Invoice download handler
   const handleDownloadInvoice = async (order) => {
     setDownloadingId(order.id);
     const result = await generateOrderInvoice(order);
@@ -149,7 +221,7 @@ const OrdersPage = () => {
                   <div className="order-header">
                     <div className="order-info">
                       <span className="order-id">Order #{order.id}</span>
-                      <span className="order-date">Placed on: {order.fullDateTime || `${order.orderDate} at ${order.orderTime || "N/A"}`}</span>
+                      <span className="order-date">Placed on: {order.orderDate || new Date(order.created_at).toLocaleDateString()}</span>
                     </div>
                     <div className="order-status">
                       <span className={`status-badge ${getStatusBadgeClass(order.status)}`}>
@@ -195,7 +267,6 @@ const OrdersPage = () => {
                       <button className="view-details-btn" onClick={() => viewOrderDetails(order)}>
                         View Details
                       </button>
-                      {/* ✅ INVOICE DOWNLOAD BUTTON */}
                       <button 
                         className="download-invoice-btn" 
                         onClick={() => handleDownloadInvoice(order)}
@@ -223,7 +294,7 @@ const OrdersPage = () => {
             <div className="order-modal-body">
               <div className="order-info-section">
                 <h4>Order Timeline</h4>
-                <p><strong>Order Date & Time:</strong> {selectedOrder.fullDateTime || `${selectedOrder.orderDate} at ${selectedOrder.orderTime || "N/A"}`}</p>
+                <p><strong>Order Date & Time:</strong> {selectedOrder.orderDate || new Date(selectedOrder.created_at).toLocaleDateString()}</p>
               </div>
               <div className="order-info-section">
                 <h4>Customer Information</h4>
@@ -287,7 +358,6 @@ const OrdersPage = () => {
                 }}>
                   🛍️ Shop Again
                 </button>
-                {/* ✅ Invoice download in modal also */}
                 <button 
                   className="download-invoice-btn" 
                   onClick={() => {
