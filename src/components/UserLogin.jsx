@@ -76,7 +76,6 @@ const UserLogin = () => {
 
   const navigate = useNavigate();
 
-  // ─── ✅ FIXED: Admin credentials (fallback + env override) ───
   const ADMIN_EMAIL = process.env.REACT_APP_ADMIN_EMAIL || "elvreofficals@gmail.com";
   const ADMIN_PASSWORD = process.env.REACT_APP_ADMIN_PASSWORD || "Elvre@2024";
 
@@ -99,17 +98,7 @@ const UserLogin = () => {
     return () => clearTimeout(timer);
   }, [isBlocked]);
 
-  // Session timeout for regular users while sitting on this page
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (localStorage.getItem("currentUser") && !localStorage.getItem("adminLoggedIn")) {
-        localStorage.removeItem("currentUser");
-        alert("Session expired. Please login again.");
-        navigate("/login");
-      }
-    }, 30 * 60 * 1000);
-    return () => clearTimeout(timer);
-  }, [navigate]);
+  // ✅ REMOVED: 30-minute session expiry timer
 
   // Supabase fires PASSWORD_RECOVERY when the user opens their reset-password
   // email link — switch this page into "set new password" mode.
@@ -215,7 +204,6 @@ const UserLogin = () => {
     if (trimmedEmail === ADMIN_EMAIL && trimmedPassword === ADMIN_PASSWORD) {
       setLoading(true);
       try {
-        // Use Supabase Auth to create a session so RLS policies work
         const { error: authError } = await supabase.auth.signInWithPassword({
           email: trimmedEmail,
           password: trimmedPassword,
@@ -275,7 +263,7 @@ const UserLogin = () => {
 
         localStorage.setItem("currentUser", JSON.stringify(userInfo));
         localStorage.removeItem("adminLoggedIn");
-        localStorage.setItem("sessionExpiry", Date.now() + 30 * 60 * 1000);
+        // ✅ sessionExpiry REMOVED
         localStorage.removeItem(LOGIN_ATTEMPTS_KEY);
         localStorage.removeItem(LOGIN_BLOCK_KEY);
         setLoginAttempts(0);
@@ -367,6 +355,7 @@ const UserLogin = () => {
     }
   };
 
+  // ─── RENDER ────────────────────────────────────────
   return (
     <>
       <Navbar />

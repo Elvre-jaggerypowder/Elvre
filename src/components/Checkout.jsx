@@ -2,15 +2,8 @@ import { supabase } from '../supabaseClient';
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
-import PaymentButton from './PaymentButton'; // ✅ Razorpay integration
+import PaymentButton from './PaymentButton';
 import { sendOrderEmails } from '../services/emailService';
-import { 
-  sendOTP, 
-  generateOTP, 
-  storeOTP, 
-  verifyOTP, 
-  getOTPExpiryTime 
-} from '../services/smsService';
 import "./Checkout.css";
 
 const Checkout = () => {
@@ -29,14 +22,6 @@ const Checkout = () => {
   const [emailSent, setEmailSent] = useState(false);
   const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
   
-  // OTP States
-  const [phoneVerified, setPhoneVerified] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpCode, setOtpCode] = useState("");
-  const [otpTimer, setOtpTimer] = useState(0);
-  const [canResend, setCanResend] = useState(false);
-  const [isSendingOtp, setIsSendingOtp] = useState(false);
-  
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -45,45 +30,12 @@ const Checkout = () => {
     city: "",
     state: "",
     pincode: "",
-    paymentMethod: "cod" // ✅ default: COD
+    paymentMethod: "cod"
   });
 
   useEffect(() => {
     checkUserAndLoadCart();
   }, []);
-
-  // Timer effect for OTP countdown
-  useEffect(() => {
-    if (otpTimer > 0) {
-      const interval = setInterval(() => {
-        setOtpTimer(prev => {
-          if (prev <= 1) {
-            setCanResend(true);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [otpTimer]);
-
-  // When phone changes, reset OTP verification
-  useEffect(() => {
-    if (formData.phone) {
-      const remaining = getOTPExpiryTime(formData.phone);
-      if (remaining > 0) {
-        setOtpSent(true);
-        setOtpTimer(remaining);
-        setCanResend(false);
-      } else {
-        setOtpSent(false);
-        setPhoneVerified(false);
-        setOtpTimer(0);
-        setCanResend(true);
-      }
-    }
-  }, [formData.phone]);
 
   const checkUserAndLoadCart = () => {
     const user = localStorage.getItem("currentUser");
@@ -248,58 +200,6 @@ const Checkout = () => {
     }
   };
 
-  // ======================= OTP FUNCTIONS =======================
-  const handleSendOTP = async () => {
-    const phone = formData.phone;
-    if (!phone || phone.length < 10) {
-      alert("⚠️ Please enter a valid 10-digit phone number.");
-      return;
-    }
-
-    setIsSendingOtp(true);
-    const otp = generateOTP();
-    
-    storeOTP(phone, otp);
-    const result = await sendOTP(phone, otp);
-    
-    if (result.success) {
-      setOtpSent(true);
-      setOtpTimer(300);
-      setCanResend(false);
-      alert(`✅ OTP sent to ${phone}. Please check your SMS. (Demo: ${otp})`); 
-    } else {
-      alert(`❌ Failed to send OTP: ${result.error}. Please try again.`);
-    }
-    setIsSendingOtp(false);
-  };
-
-  const handleVerifyOTP = () => {
-    const phone = formData.phone;
-    if (!otpCode || otpCode.length < 6) {
-      alert("⚠️ Please enter the 6-digit OTP.");
-      return;
-    }
-
-    const result = verifyOTP(phone, otpCode);
-    
-    if (result.success) {
-      setPhoneVerified(true);
-      setOtpSent(false);
-      setOtpTimer(0);
-      setOtpCode("");
-      alert("✅ Phone number verified successfully!");
-    } else {
-      alert(`❌ ${result.message}`);
-    }
-  };
-
-  const handleResendOTP = () => {
-    if (canResend) {
-      handleSendOTP();
-    }
-  };
-  // ============================================================
-
   const handleSelectAddress = (addressId) => {
     const address = savedAddresses.find(a => a.id === parseInt(addressId));
     if (address) {
@@ -315,22 +215,12 @@ const Checkout = () => {
         paymentMethod: formData.paymentMethod
       });
       setShowNewAddressForm(false);
-      setPhoneVerified(false);
-      setOtpSent(false);
-      setOtpTimer(0);
-      setOtpCode("");
     }
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-    if (name === "phone") {
-      setPhoneVerified(false);
-      setOtpSent(false);
-      setOtpTimer(0);
-      setOtpCode("");
-    }
   };
 
   const handleUseNewAddress = () => {
@@ -346,10 +236,6 @@ const Checkout = () => {
       pincode: "",
       paymentMethod: formData.paymentMethod
     });
-    setPhoneVerified(false);
-    setOtpSent(false);
-    setOtpTimer(0);
-    setOtpCode("");
   };
 
   const handleContinueToPayment = () => {
@@ -359,10 +245,6 @@ const Checkout = () => {
     }
     
     if (showNewAddressForm) {
-      if (!phoneVerified) {
-        alert("Please verify your phone number first");
-        return;
-      }
       if (formData.fullName && formData.address && formData.city && formData.state && formData.pincode && formData.phone) {
         saveAddress(formData);
         setStep(2);
@@ -386,21 +268,11 @@ const Checkout = () => {
     setShowNewAddressForm(false);
   };
 
-  // ============================================================
-  // 🔥 PLACE ORDER (called directly for COD, or after payment success)
-  // ============================================================
   const placeOrder = async (e) => {
     if (e) e.preventDefault();
-    
-    // Prevent duplicate submission
     if (isPaymentProcessing) return;
     
-    // ─── Step 1: Validate Address ───
     if (showNewAddressForm && !selectedAddressId) {
-      if (!phoneVerified) {
-        alert("Please verify your phone number first");
-        return;
-      }
       saveAddress(formData);
     }
     
@@ -416,21 +288,18 @@ const Checkout = () => {
     const orderDate = now.toLocaleDateString();
     const orderTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
-    // ─── Step 2: Check and Update Stock in Supabase ───
+    // ─── Stock Check ───
     console.log('🔄 Checking stock availability...');
-    
     const stockCheckPromises = cart.map(async (item) => {
       const { data, error } = await supabase
         .from('products')
         .select('id, name, stock, variants')
         .eq('id', item.id)
         .single();
-      
       if (error) {
         console.error(`Error fetching stock for ${item.name}:`, error);
         throw new Error(`Could not check stock for ${item.name}`);
       }
-      
       return { ...item, dbStock: data.stock, dbVariants: data.variants };
     });
     
@@ -446,14 +315,10 @@ const Checkout = () => {
     for (const item of stockData) {
       const orderedQty = item.quantity || 1;
       let availableStock = item.dbStock;
-      
       if (item.variant && item.dbVariants) {
         const variant = item.dbVariants.find(v => v.label === item.variant);
-        if (variant) {
-          availableStock = variant.stock || 0;
-        }
+        if (variant) availableStock = variant.stock || 0;
       }
-      
       if (availableStock < orderedQty) {
         alert(`❌ Insufficient stock for ${item.name}${item.variant ? ` (${item.variant})` : ''}. Only ${availableStock} left.`);
         setIsPaymentProcessing(false);
@@ -461,13 +326,12 @@ const Checkout = () => {
       }
     }
     
-    // ─── Step 3: Update Stock ───
+    // ─── Update Stock ───
     console.log('📦 Updating stock in Supabase...');
     const updatePromises = stockData.map(async (item) => {
       const orderedQty = item.quantity || 1;
       let newStock = item.dbStock - orderedQty;
       let updateData = { stock: newStock };
-      
       if (item.variant && item.dbVariants) {
         const updatedVariants = item.dbVariants.map(v => {
           if (v.label === item.variant) {
@@ -475,22 +339,10 @@ const Checkout = () => {
           }
           return v;
         });
-        updateData = { 
-          stock: newStock,
-          variants: updatedVariants 
-        };
+        updateData = { stock: newStock, variants: updatedVariants };
       }
-      
-      const { error } = await supabase
-        .from('products')
-        .update(updateData)
-        .eq('id', item.id);
-      
-      if (error) {
-        console.error(`Error updating stock for ${item.name}:`, error);
-        throw new Error(`Failed to update stock for ${item.name}`);
-      }
-      
+      const { error } = await supabase.from('products').update(updateData).eq('id', item.id);
+      if (error) throw new Error(`Failed to update stock for ${item.name}`);
       return { id: item.id, newStock };
     });
     
@@ -503,7 +355,7 @@ const Checkout = () => {
       return;
     }
     
-    // ─── Step 4: Update localStorage ───
+    // ─── Update localStorage ───
     const allProducts = JSON.parse(localStorage.getItem("elvreProducts") || "[]");
     const updatedProducts = allProducts.map(product => {
       const orderedItem = cart.find(item => item.id === product.id);
@@ -516,7 +368,7 @@ const Checkout = () => {
     localStorage.setItem("elvreProducts", JSON.stringify(updatedProducts));
     window.dispatchEvent(new Event("productsUpdated"));
     
-    // ─── Step 5: Build Order ───
+    // ─── Build Order ───
     const newOrder = {
       id: "ORD" + Date.now(),
       customer: formData.fullName,
@@ -536,48 +388,35 @@ const Checkout = () => {
       discount: 0,
       total: total,
       payment_method: formData.paymentMethod === "cod" ? "Cash on Delivery" : "Online Payment",
-      payment_status: formData.paymentMethod === "cod" ? "pending" : "paid", // ✅ Online payment marked paid
+      payment_status: formData.paymentMethod === "cod" ? "pending" : "paid",
       status: "pending",
       order_date: orderDate,
       order_time: orderTime,
       created_at: now.toISOString()
     };
 
-    // ─── Step 6: Save Order ───
+    // ─── Save Order ───
     console.log('💾 Saving order:', newOrder.id);
-    
     try {
-      const { data, error } = await supabase
-        .from('orders')
-        .insert([newOrder]);
-
-      if (error) {
-        console.error('❌ Supabase error:', error);
-      } else {
-        console.log('✅ Order saved to Supabase!', data);
-      }
+      const { data, error } = await supabase.from('orders').insert([newOrder]);
+      if (error) console.error('❌ Supabase error:', error);
+      else console.log('✅ Order saved to Supabase!', data);
     } catch (err) {
       console.error('❌ Exception:', err);
     }
 
-    // ─── Step 7: Save to localStorage ───
     const existingOrders = JSON.parse(localStorage.getItem("elvreOrders") || "[]");
     existingOrders.unshift(newOrder);
     localStorage.setItem("elvreOrders", JSON.stringify(existingOrders));
-
-    // ─── Step 8: Clear Cart ───
     localStorage.removeItem("cart");
     setCart([]);
     window.dispatchEvent(new Event("storage"));
 
-    // ─── Step 9: Send Emails ───
     if (!emailSent) {
       try {
         console.log('📧 Sending order emails...');
         const emailResult = await sendOrderEmails(newOrder);
-        if (emailResult.success) {
-          console.log('✅ Order emails sent!');
-        }
+        if (emailResult.success) console.log('✅ Order emails sent!');
         setEmailSent(true);
       } catch (emailErr) {
         console.error('❌ Email error:', emailErr);
@@ -682,66 +521,14 @@ const Checkout = () => {
                       </div>
                       <div className="form-group">
                         <label>Phone Number *</label>
-                        <div className="phone-verification-group">
-                          <input 
-                            type="tel" 
-                            name="phone" 
-                            value={formData.phone} 
-                            onChange={handleInputChange} 
-                            placeholder="10-digit mobile number" 
-                            required 
-                            disabled={phoneVerified}
-                          />
-                          {!phoneVerified && formData.phone && formData.phone.length >= 10 && !otpSent && (
-                            <button 
-                              type="button" 
-                              className="send-otp-btn" 
-                              onClick={handleSendOTP} 
-                              disabled={isSendingOtp}
-                            >
-                              {isSendingOtp ? "Sending..." : "📱 Send OTP"}
-                            </button>
-                          )}
-                        </div>
-                        {otpSent && !phoneVerified && (
-                          <div className="otp-verification-group">
-                            <input 
-                              type="text" 
-                              placeholder="Enter 6-digit OTP" 
-                              value={otpCode} 
-                              onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))} 
-                              maxLength="6"
-                              className="otp-input"
-                              autoFocus
-                            />
-                            <button type="button" className="verify-otp-btn" onClick={handleVerifyOTP}>
-                              ✅ Verify
-                            </button>
-                            <div className="otp-status">
-                              {otpTimer > 0 ? (
-                                <span className="otp-timer">
-                                  ⏳ OTP expires in {Math.floor(otpTimer / 60)}:{(otpTimer % 60).toString().padStart(2, '0')}
-                                </span>
-                              ) : (
-                                canResend && (
-                                  <button 
-                                    type="button" 
-                                    className="resend-otp-btn" 
-                                    onClick={handleResendOTP} 
-                                    disabled={isSendingOtp}
-                                  >
-                                    {isSendingOtp ? "Sending..." : "🔄 Resend OTP"}
-                                  </button>
-                                )
-                              )}
-                            </div>
-                          </div>
-                        )}
-                        {phoneVerified && (
-                          <div className="verified-badge" style={{color: 'green', fontWeight: 'bold'}}>
-                            ✅ Phone Verified
-                          </div>
-                        )}
+                        <input 
+                          type="tel" 
+                          name="phone" 
+                          value={formData.phone} 
+                          onChange={handleInputChange} 
+                          placeholder="10-digit mobile number" 
+                          required 
+                        />
                       </div>
                       <div className="form-group">
                         <label>Address *</label>
@@ -772,10 +559,7 @@ const Checkout = () => {
               ) : (
                 <>
                   <h2>Payment Method</h2>
-                  
-                  {/* ✅ UPDATED PAYMENT METHODS */}
                   <div className="payment-methods-list">
-                    {/* COD */}
                     <div 
                       className={`payment-method-card ${formData.paymentMethod === 'cod' ? 'selected' : ''}`}
                       onClick={() => setFormData({...formData, paymentMethod: 'cod'})}
@@ -786,8 +570,6 @@ const Checkout = () => {
                         <p>Pay when you receive your order</p>
                       </div>
                     </div>
-                    
-                    {/* Online Payment - Razorpay */}
                     <div 
                       className={`payment-method-card ${formData.paymentMethod === 'online' ? 'selected' : ''}`}
                       onClick={() => setFormData({...formData, paymentMethod: 'online'})}
@@ -821,7 +603,6 @@ const Checkout = () => {
                           phone: formData.phone
                         }}
                         onSuccess={() => {
-                          // ✅ Payment successful → place order
                           console.log('✅ Payment success! Placing order...');
                           placeOrder();
                         }}

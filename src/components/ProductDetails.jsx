@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import WhatsApp from "./WhatsApp";
@@ -15,7 +15,6 @@ const ProductDetails = () => {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
-  const [selectedImage, setSelectedImage] = useState(0);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
@@ -23,33 +22,8 @@ const ProductDetails = () => {
   // ─── VARIANT STATE ───
   const [selectedVariant, setSelectedVariant] = useState(null);
 
-  // ─── LOAD PRODUCT & REVIEWS ───
-  useEffect(() => {
-    loadProduct();
-    loadReviews();
-
-    const productSub = supabase
-      .channel('product-details')
-      .on('postgres_changes', 
-        { event: 'UPDATE', schema: 'public', table: 'products', filter: `id=eq.${parseInt(id)}` }, 
-        (payload) => {
-          console.log('🔄 Product updated:', payload.new);
-          setProduct(prev => ({ ...prev, ...payload.new }));
-        }
-      )
-      .subscribe();
-
-    const handleProductsUpdated = () => loadProduct();
-    window.addEventListener("productsUpdated", handleProductsUpdated);
-
-    return () => {
-      productSub.unsubscribe();
-      window.removeEventListener("productsUpdated", handleProductsUpdated);
-    };
-  }, [id]);
-
   // ─── LOAD PRODUCT ───
-  const loadProduct = async () => {
+  const loadProduct = useCallback(async () => {
     setLoading(true);
     try {
       const { data: supabaseProduct, error } = await supabase
@@ -70,7 +44,7 @@ const ProductDetails = () => {
           category: supabaseProduct.category,
           badge: supabaseProduct.badge,
           soldCount: supabaseProduct.sold_count || 0,
-          variants: supabaseProduct.variants || [],  // ✅ load variants
+          variants: supabaseProduct.variants || [],
           enhancedInfo: {
             brand: "ELVRE Enterprises",
             origin: "Made in India",
@@ -103,24 +77,19 @@ const ProductDetails = () => {
           ]
         };
         setProduct(foundProduct);
-        // Set default variant (first one if exists)
         if (foundProduct.variants && foundProduct.variants.length > 0) {
           setSelectedVariant(foundProduct.variants[0]);
         } else {
           setSelectedVariant(null);
         }
-        // Update localStorage cache
         const savedProducts = localStorage.getItem("elvreProducts");
         if (savedProducts) {
           const products = JSON.parse(savedProducts);
           const updated = products.map(p => p.id === foundProduct.id ? foundProduct : p);
           localStorage.setItem("elvreProducts", JSON.stringify(updated));
         }
-
-        // ✅ Load related products from the same category
         loadRelatedProducts(foundProduct);
       } else {
-        // fallback to localStorage
         const savedProducts = localStorage.getItem("elvreProducts");
         if (savedProducts) {
           const products = JSON.parse(savedProducts);
@@ -138,10 +107,10 @@ const ProductDetails = () => {
       console.error('❌ loadProduct error:', err);
     }
     setLoading(false);
-  };
+  }, [id]);
 
-  // ─── LOAD RELATED PRODUCTS (same category, excluding current) ───
-  const loadRelatedProducts = async (currentProduct) => {
+  // ─── LOAD RELATED PRODUCTS ───
+  const loadRelatedProducts = useCallback(async (currentProduct) => {
     if (!currentProduct?.category) {
       setRelatedProducts([]);
       return;
@@ -163,7 +132,6 @@ const ProductDetails = () => {
         }));
         setRelatedProducts(mapped);
       } else {
-        // fallback to localStorage cache
         const savedProducts = localStorage.getItem("elvreProducts");
         if (savedProducts) {
           const products = JSON.parse(savedProducts);
@@ -179,10 +147,10 @@ const ProductDetails = () => {
       console.error('❌ loadRelatedProducts error:', err);
       setRelatedProducts([]);
     }
-  };
+  }, []);
 
   // ─── LOAD REVIEWS ───
-  const loadReviews = async () => {
+  const loadReviews = useCallback(async () => {
     try {
       const { data: supabaseReviews, error } = await supabase
         .from('reviews')
@@ -210,7 +178,7 @@ const ProductDetails = () => {
       const savedReviews = localStorage.getItem(`reviews_${id}`);
       if (savedReviews) setReviews(JSON.parse(savedReviews));
     }
-  };
+  }, [id]);
 
   // ─── SUBMIT REVIEW ───
   const submitReview = async (e) => {
@@ -259,7 +227,7 @@ const ProductDetails = () => {
     setTimeout(() => setShowNotification(false), 3000);
   };
 
-  // ─── CART ACTIONS (with variant) ───
+  // ─── CART ACTIONS ───
   const getVariantPrice = () => {
     if (selectedVariant && selectedVariant.price) {
       return parseFloat(selectedVariant.price);
@@ -315,22 +283,35 @@ const ProductDetails = () => {
     setTimeout(() => toast.remove(), 2000);
   };
 
-  const buyNow = () => {
-    addToCart();
-    const user = localStorage.getItem("currentUser");
-    if (!user) {
-      localStorage.setItem("redirectAfterLogin", "/checkout");
-      navigate("/login");
-    } else {
-      navigate("/checkout");
-    }
-  };
-
   const getAverageRating = () => {
     if (reviews.length === 0) return 0;
     const sum = reviews.reduce((acc, rev) => acc + rev.rating, 0);
     return (sum / reviews.length).toFixed(1);
   };
+
+  useEffect(() => {
+    loadProduct();
+    loadReviews();
+
+    const productSub = supabase
+      .channel('product-details')
+      .on('postgres_changes', 
+        { event: 'UPDATE', schema: 'public', table: 'products', filter: `id=eq.${parseInt(id)}` }, 
+        (payload) => {
+          console.log('🔄 Product updated:', payload.new);
+          setProduct(prev => ({ ...prev, ...payload.new }));
+        }
+      )
+      .subscribe();
+
+    const handleProductsUpdated = () => loadProduct();
+    window.addEventListener("productsUpdated", handleProductsUpdated);
+
+    return () => {
+      productSub.unsubscribe();
+      window.removeEventListener("productsUpdated", handleProductsUpdated);
+    };
+  }, [id, loadProduct, loadReviews]);
 
   if (loading) return <div className="loading">Loading...</div>;
   if (!product) return <div className="not-found">Product not found</div>;
@@ -338,7 +319,6 @@ const ProductDetails = () => {
   const currentStock = getVariantStock();
   const currentPrice = getVariantPrice();
 
-  // ─── RENDER ───
   return (
     <>
       <Navbar />
@@ -357,19 +337,12 @@ const ProductDetails = () => {
           </div>
 
           <div className="product-detail-grid">
-            {/* Image Gallery */}
             <div className="product-gallery">
               <div className="main-image">
                 <img src={product.image} alt={product.name} />
               </div>
-              <div className="thumbnail-list">
-                <img src={product.image} alt="View 1" className="thumbnail active" onClick={() => setSelectedImage(0)} />
-                <img src="/assets/productpacking.png" alt="View 2" className="thumbnail" onClick={() => setSelectedImage(1)} />
-                <img src="/assets/bowl.png" alt="View 3" className="thumbnail" onClick={() => setSelectedImage(2)} />
-              </div>
             </div>
 
-            {/* Product Info */}
             <div className="product-info-section">
               <h1>{product.name}</h1>
               
@@ -388,7 +361,6 @@ const ProductDetails = () => {
                 <span className="discount-badge">Save {Math.round(product.priceValue * 0.2)}₹</span>
               </div>
 
-              {/* ─── VARIANTS SELECTOR ─── */}
               {product.variants && product.variants.length > 0 && (
                 <div className="variant-selector">
                   <label>Select Weight</label>
@@ -434,7 +406,6 @@ const ProductDetails = () => {
 
                   <div className="action-buttons">
                     <button className="add-cart-btn" onClick={addToCart}>Add to Cart</button>
-                    <button className="buy-now-btn" onClick={buyNow}>Buy Now</button>
                   </div>
                 </>
               )}
@@ -465,7 +436,6 @@ const ProductDetails = () => {
             </div>
           </div>
 
-          {/* Tabs */}
           <div className="product-tabs">
             <button className={`tab-btn ${activeTab === "description" ? "active" : ""}`} onClick={() => setActiveTab("description")}>Description</button>
             <button className={`tab-btn ${activeTab === "ingredients" ? "active" : ""}`} onClick={() => setActiveTab("ingredients")}>Ingredients</button>
@@ -575,7 +545,6 @@ const ProductDetails = () => {
             )}
           </div>
 
-          {/* Related Products */}
           {relatedProducts.length > 0 && (
             <div className="related-products">
               <h3>You May Also Like</h3>
@@ -601,7 +570,6 @@ const ProductDetails = () => {
         />
       )}
 
-      {/* ─── STICKY ADD TO CART BAR ─── */}
       {currentStock > 0 && (
         <div className="sticky-add-to-cart">
           <div className="sticky-container">

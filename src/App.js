@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import AOS from "aos";
 import "aos/dist/aos.css";
+import { supabase } from "./supabaseClient"; // ✅ Import added
 
 // Public Components
 import Home from "./Home";
@@ -29,7 +30,7 @@ import UserSignup from "./components/UserSignup";
 import Checkout from "./components/Checkout";
 import OrderTracking from "./components/OrderTracking";
 
-// Admin Component (only Dashboard, no Login)
+// Admin Component
 import AdminDashboard from "./components/AdminDashboard";
 
 // Context & Utils
@@ -69,14 +70,6 @@ const Layout = ({ children, isChatbotOpen, setIsChatbotOpen }) => (
 
 // ============================================
 // Root Handler – detects a Google/OAuth redirect landing on "/"
-//
-// IMPORTANT: this app uses HashRouter, so all in-app routes live after
-// the "#" (e.g. yoursite.com/#/login). But Supabase's OAuth redirect
-// appends its own params to the REAL browser URL, BEFORE the "#":
-//   yoursite.com/?code=xxxxx&state=xxxxx#/
-// react-router's useSearchParams() only reads what's inside the hash, so
-// it would never see "code" here. We read window.location.search
-// directly instead — that's the actual query string Supabase wrote.
 // ============================================
 const RootHandler = ({ isChatbotOpen, setIsChatbotOpen }) => {
   const [isAuthCallback, setIsAuthCallback] = useState(() => {
@@ -101,6 +94,7 @@ const RootHandler = ({ isChatbotOpen, setIsChatbotOpen }) => {
 function App() {
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
+  // ─── AOS INIT ───
   useEffect(() => {
     AOS.init({
       duration: 1000,
@@ -108,6 +102,75 @@ function App() {
       offset: 100,
       disable: false,
     });
+  }, []);
+
+  // ─── ✅ RESTORE USER SESSION ON PAGE LOAD (PERSISTENT LOGIN) ───
+  useEffect(() => {
+    const restoreUser = async () => {
+      // 1. Check if there's a Supabase session
+      const { data, error } = await supabase.auth.getSession();
+      if (error || !data?.session) {
+        // No session – clear any stale user data
+        localStorage.removeItem("currentUser");
+        localStorage.removeItem("adminLoggedIn");
+        return;
+      }
+
+      // 2. Session exists – check if we have user data in localStorage
+      const currentUser = localStorage.getItem("currentUser");
+      const user = data.session.user;
+
+      if (!currentUser) {
+        // Fetch user from 'users' table
+        const { data: userData, error: fetchError } = await supabase
+          .from("users")
+          .select("id, name, email, phone")
+          .eq("email", user.email)
+          .maybeSingle();
+
+        if (fetchError) {
+          console.error("Failed to fetch user on restore:", fetchError);
+          return;
+        }
+
+        if (userData) {
+          const userInfo = {
+            id: userData.id,
+            name: userData.name || user.user_metadata?.full_name || "User",
+            email: user.email,
+            phone: userData.phone || "",
+          };
+          localStorage.setItem("currentUser", JSON.stringify(userInfo));
+        } else {
+          // User not found – clear session
+          await supabase.auth.signOut();
+          localStorage.removeItem("currentUser");
+          localStorage.removeItem("adminLoggedIn");
+        }
+      } else {
+        // 3. Verify stored user matches session user
+        const stored = JSON.parse(currentUser);
+        if (stored.email !== user.email) {
+          // Different user – update
+          const { data: userData } = await supabase
+            .from("users")
+            .select("id, name, email, phone")
+            .eq("email", user.email)
+            .maybeSingle();
+          if (userData) {
+            localStorage.setItem("currentUser", JSON.stringify({
+              id: userData.id,
+              name: userData.name || user.user_metadata?.full_name || "User",
+              email: user.email,
+              phone: userData.phone || "",
+            }));
+          }
+        }
+        // If same user, nothing to do – already logged in.
+      }
+    };
+
+    restoreUser();
   }, []);
 
   return (

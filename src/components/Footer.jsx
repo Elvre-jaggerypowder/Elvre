@@ -85,8 +85,8 @@ const Footer = () => {
           <ul>
             <li><RouterLink to="/">Home</RouterLink></li>
             <li><RouterLink to="/our-story">About Us</RouterLink></li>
-            <li><RouterLink to="/products">Testimonials</RouterLink></li>
-            <li><ScrollLink to="contact" smooth={true} duration={500}>Contact Us</ScrollLink></li>
+            <li><RouterLink to="/products">products</RouterLink></li>
+            <li><RouterLink to="/contact" smooth={true} duration={500}>Contact Us</RouterLink></li>
           </ul>
         </div>
 
