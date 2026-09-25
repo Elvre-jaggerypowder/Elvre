@@ -56,12 +56,12 @@
   animation-delay: 0.2s;
 }
 .tagline-title {
-  font-size: clamp(0.7rem, 1.8vw + 0.3rem, 1.8rem);
+  font-size: clamp(2rem, 1.8vw + 0.3rem, 3rem);
 }
 .tagline-title1 {
-  font-size: clamp(0.95rem, 2.6vw + 0.4rem, 2.6rem);
-  padding-left: clamp(8px, 15%, 40px);
-  color: #d97f0b;
+  font-size: clamp(1rem, 2.6vw + 0.4rem, 2rem);
+  transform: translateX(50px);
+  color: #440800bb;
 }
 
 /* ─── BOTTOM LEFT TEXT BLOCK ─── */
@@ -71,29 +71,28 @@
   animation-delay: 0.8s;
 }
 .tagline-title3 {
-  font-size: clamp(0.65rem, 1.6vw + 0.25rem, 1.6rem);
-  padding-left: clamp(4px, 8%, 20px);
+  font-size: clamp(2rem, 1.6vw + 0.25rem, 3rem);
+  transform: translateX(4px);
 }
 .tagline-title2 {
-  font-size: clamp(0.8rem, 2vw + 0.3rem, 2rem);
-  color: #e0860f;
+  font-size: clamp(1rem, 2vw + 0.3rem, 2rem);
+  color: #440800bb;
 }
 
 /* ─── RIGHT SIDE TEXT BLOCK ─── */
 .product-highlight {
-  top: 30%;
+  top: 40%;
   right: 5%;
   animation-delay: 0.4s;
   text-align: right;
 }
 .highlight-text {
-  font-size: clamp(0.7rem, 1.8vw + 0.3rem, 1.8rem);
+  font-size: clamp(2rem, 1.8vw + 0.3rem, 2rem);
 }
 .highlight-text1 {
-  font-size: clamp(1.05rem, 3vw + 0.4rem, 3rem);
+  font-size: clamp(1rem, 3vw + 0.6rem, 2rem);
   padding-left: clamp(8px, 15%, 40px);
-  color: #ab6810;
-  line-height: 1.1;
+  color: #440800bb;
 }
 
 /* ─── ANIMATIONS ─── */
