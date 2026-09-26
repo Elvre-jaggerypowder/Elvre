@@ -68,7 +68,7 @@
 .hero-tagline1 {
   bottom: 16%;
   left: 5%;
-  animation-delay: 0.8s;
+  animation-delay: 0.2s;
 }
 .tagline-title3 {
   font-size: clamp(2rem, 1.6vw + 0.25rem, 3rem);
@@ -83,7 +83,7 @@
 .product-highlight {
   top: 40%;
   right: 5%;
-  animation-delay: 0.4s;
+  animation-delay: 0.2s;
   text-align: right;
 }
 .highlight-text {
@@ -124,7 +124,7 @@
   right: 6%;
   background: #1f3d1f;
   color: #ffffff;
-  padding: 8px 20px;   /* pehle 12px 30px tha */
+  padding: 8px 20px;   
   border: none;
   border-radius: 8px;
   font-size: clamp(0.75rem, 1vw, 0.9rem);   /* pehle clamp(0.85rem, 1.1vw, 1rem) tha */
@@ -151,7 +151,7 @@
   /* 👉 Mobile pe button aur bhi chhota */
   .buy-now-btn {
     padding: 6px 16px;
-    font-size: 0.7rem;
+    font-size: 0.5rem;
   }
 }
 
@@ -162,6 +162,30 @@
   .hero-section {
     padding-top: 75px;
   }
+
+
+.tagline-title2,
+.highlight-text1 {
+  font-size: 1rem;
+  margin: 0;
+}
+.tagline-title,
+.tagline-title3 {
+  font-size: 1.1rem;
+  margin: 0;
+  padding-left: 0;
+}
+.highlight-text {
+  font-size: 0.9rem;
+  margin: 0; 
+  padding-left: 0;
+}
+.tagline-title1 {
+  position: relative;
+  left: -20px;
+  font-size: 1rem;
+  margin: 0;
+}
 
   .product-highlight,
   .hero-tagline,
@@ -175,13 +199,14 @@
   .product-highlight { top: 26%; }
 
   /* 👉 Bahut chhoti screens pe sabse chhota button */
-  .buy-now-btn {
-    bottom: 4%;
-    padding: 5px 14px;
-    font-size: 0.65rem;
-    min-width: unset;
-    text-align: center;
-  }
+.buy-now-btn {
+  bottom: 4%;
+  padding: 4px 10px;
+  font-size: 0.5rem;
+  min-width: unset;
+  text-align: center;
+  transform: scale(0.6) !important;
+}
 }
 
 /* ============================================
@@ -195,6 +220,7 @@
   .buy-now-btn {
     padding: 7px 18px;
     font-size: 0.8rem;
+    transform: scale(0.7) !important;
   }
 }
 
@@ -210,6 +236,7 @@
     bottom: 12%;
     padding: 10px 26px;
     font-size: 0.95rem;
+    transform: scale(0.8) !important;
   }
 }
 
