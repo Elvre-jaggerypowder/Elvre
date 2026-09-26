@@ -11,7 +11,6 @@ const Footer = () => {
   
   const [contactInfo, setContactInfo] = useState({
     phone1: "+91 7060998050",
-    phone2: "+91 7906396629",
     email: "elvreofficals@gmail.com",
     address: "1st Floor, Sangam Tent House, Jawalapur, Haridwar, Uttrakhand, 249407"
   });
@@ -67,7 +66,7 @@ const Footer = () => {
           />
           <p className="footer-tagline">Elvre Enterprises Private Limited. All Rights Reserved.</p>
           <div className="footer-social">
-            <a href="https://wa.me/917906396629" target="_blank" rel="noreferrer"><FaWhatsapp /></a>
+            <a href="https://wa.me/917060998050" target="_blank" rel="noreferrer"><FaWhatsapp /></a>
             <a href="https://www.facebook.com/profile.php?id=61579641740801" target="_blank" rel="noreferrer"><FaFacebookF /></a>
             <a href="https://www.instagram.com/elvre.farmessence/" target="_blank" rel="noreferrer"><FaInstagram /></a>
             <a href="https://www.linkedin.com/company/elvre-enterprised-private-limited/" target="_blank" rel="noreferrer"><FaLinkedinIn /></a>

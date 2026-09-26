@@ -87,7 +87,6 @@ const Contact = () => {
   const setDefaultContact = () => {
     const defaultInfo = {
       phone1: "+91 7060998050",
-      phone2: "+91 7906396629",
       email: "elvreofficals@gmail.com",
       address: "1st Floor, Sangam Tent House, Jawalapur, Haridwar, Uttrakhand, 249407"
     };
@@ -223,7 +222,6 @@ const Contact = () => {
                 <div>
                   <h4>Phone</h4>
                   <p className="contact-phone">{contactInfo.phone1}</p>
-                  {contactInfo.phone2 && <p className="contact-phone">{contactInfo.phone2}</p>}
                 </div>
               </div>
               <div className="contact-info-item">
