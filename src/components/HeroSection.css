@@ -165,25 +165,25 @@
 
 
 .tagline-title2,
-.highlight-text1 {
-  font-size: 1rem;
+.highlight-text1,
+.tagline-title1 {
+  font-size: 0.8rem;
   margin: 0;
 }
 .tagline-title,
-.tagline-title3 {
-  font-size: 1.1rem;
+.tagline-title3,
+.highlight-text {
+  font-size: 0.9rem;
   margin: 0;
   padding-left: 0;
 }
 .highlight-text {
-  font-size: 0.9rem;
   margin: 0; 
   padding-left: 0;
 }
 .tagline-title1 {
   position: relative;
   left: -20px;
-  font-size: 1rem;
   margin: 0;
 }
 
@@ -191,8 +191,8 @@
   .hero-tagline,
   .hero-tagline1 {
     max-width: 48%;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
   .hero-tagline { top: 8%; }
   .hero-tagline1 { bottom: 20%; }
@@ -201,6 +201,7 @@
   /* 👉 Bahut chhoti screens pe sabse chhota button */
 .buy-now-btn {
   bottom: 4%;
+  right: -4%;
   padding: 4px 10px;
   font-size: 0.5rem;
   min-width: unset;

@@ -6,7 +6,7 @@ function HeroSection() {
     <section id="hero" className="hero-section">
       <div className="image-slider">
         <img
-          src={`${process.env.PUBLIC_URL}/assets/newproduct.png`}
+          src={`${process.env.PUBLIC_URL}/assets/heroimage.png`}
           className="hero-product-image"
           alt="ELVRE Jaggery Product"
         />
@@ -25,7 +25,7 @@ function HeroSection() {
 
         {/* Floating Text 3 - Right Side */}
         <div className="product-highlight">
-          <h2 className="highlight-text">A Natural source</h2>
+          <h2 className="highlight-text">A Natural Source</h2>
           <h2 className="highlight-text1">of Energy</h2>
         </div>
       </div>

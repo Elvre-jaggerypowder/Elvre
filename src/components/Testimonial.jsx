@@ -148,7 +148,7 @@ const Testimonial = () => {
       className="testimonial-hero"
       id="testimonial"
       style={{
-        backgroundImage: `url(${process.env.PUBLIC_URL}/assets/testimonial-bg.jpg)`
+        backgroundImage: `url(${process.env.PUBLIC_URL}/assets/BrownTeam.png)`,
       }}
     >
       <div className="testimonial-overlay">

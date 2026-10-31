@@ -8,16 +8,17 @@
   justify-content: center;
   position: relative;
   padding: 60px 20px;
-  /* Brighten the background image */
-  filter: brightness(1.15);
 }
 
+/* Background blur only */
 .testimonial-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.35); /* Lighter overlay */
-  z-index: 1;
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.30);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 1;
 }
 
 .testimonial-overlay {
@@ -31,7 +32,7 @@
 .testimonial-content {
   display: flex;
   align-items: center;
-  justify-content: flex-end; /* Align content to the right */
+  justify-content: center; /* Align content to the right */
   min-height: 80vh;
   gap: 40px;
 }
@@ -40,8 +41,10 @@
 .testimonial-right {
   width: 100%;
   max-width: 520px;
-  margin-left: auto;
+  margin-left: 0 auto;
 }
+
+
 
 .testimonial-card-wrapper {
   background: white;
@@ -218,12 +221,16 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: relative;
   margin-bottom: 25px;
 }
 
 .slider-dots {
   display: flex;
   gap: 8px;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
 }
 
 .dot {
@@ -246,6 +253,8 @@
   font-size: 0.8rem;
   color: #999;
   margin: 0;
+  position: absolute;
+  right: 0;
 }
 
 /* ─── CTA BUTTON ─── */

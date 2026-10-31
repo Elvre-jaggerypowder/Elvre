@@ -2,8 +2,6 @@
    MODERN AGRICULTURE SECTION — unified brand tokens
    ============================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500&family=Work+Sans:wght@400;500;600;700&display=swap');
-
 .modern-agriculture-section {
   --forest: #1F3B2C;
   --forest-deep: #142A1F;
@@ -13,16 +11,15 @@
   --paper: #F3ECDD;
   --ink-soft: #6b6153;
 
-  background: var(--paper);
+  background: var(--cream);
   overflow: hidden;
-  font-family: 'Work Sans', sans-serif;
 }
 
 /* FULL SIZE IMAGE AT TOP - like hero section */
 .agri-image-full {
   width: 100%;
   height: 60vh;
-  min-height: 400px;
+  min-height: 600px;
   overflow: hidden;
 }
 
