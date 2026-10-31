@@ -38,7 +38,7 @@ const talesData = [
       ],
       colors: ["Brown", "Dark"]
     },
-    customer: "Rahul Kumar",
+    customer: "Khushi Oberoi",
     testimonial: "Perfect for my daily chai, great taste!"
   },
   {
@@ -98,7 +98,7 @@ const talesData = [
     customer: "Neha Gupta",
     testimonial: "Perfect replacement for sugar in my recipes!"
   },
-  // ✅ FIXED: Added missing comma above
+  
   {
     id: 6,
     videoUrl: "/videos/tale6.mp4",

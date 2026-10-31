@@ -45,7 +45,7 @@ const talesData = [
       colors: ["Brown", "Dark"],
       rating: 4.6
     },
-    customer: "Rahul Kumar",
+    customer: "Khushi Oberoi",
     testimonial: "Perfect for my daily chai, great taste!"
   },
   {
