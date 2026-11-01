@@ -257,3 +257,85 @@
     transform: translateX(-50%) !important;
   }
 }
+/* ============================================
+   HERO TWO IMAGE AUTO SLIDER
+   ============================================ */
+
+.image-slider {
+    position: relative;
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Both images */
+
+.hero-product-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    margin: 0;
+    object-fit: contain;
+    pointer-events: none;
+}
+
+/* First image animation */
+
+.hero-image-one {
+    animation: firstImageFade 8s infinite ease-in-out;
+}
+
+/* Second image animation */
+
+.hero-image-two {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    animation: secondImageFade 8s infinite ease-in-out;
+}
+
+/* Image transition */
+
+@keyframes firstImageFade {
+    0%, 40% {
+        opacity: 1;
+    }
+
+    50%, 90% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes secondImageFade {
+    0%, 40% {
+        opacity: 0;
+    }
+
+    50%, 90% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+/* Accessibility */
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-image-one,
+    .hero-image-two {
+        animation: none;
+    }
+
+    .hero-image-two {
+        display: none;
+    }
+}
